@@ -1,0 +1,26 @@
+[
+  [
+    "¿Cuántas filas tiene el archivo?",
+    "El archivo contiene 10 filas de datos."
+  ],
+  [
+    "¿Cuántos números de facturas únicas hay? Toma como única, solo la primer aparición de cada factura.",
+    "Para determinar cuántos números de facturas únicas hay, debemos observar la columna \"Nro. de Factura\" y contar solo la primera aparición de cada número de factura, ignorando cualquier repetición posterior.\n\nEn las 10 filas proporcionadas, algunas facturas aparecen más de una vez, por lo que procedemos a identificar las únicas:\n\n1. `0003-00079977`\n2. `00011-00216482` (aparece dos veces, pero solo se cuenta una vez)\n3. `A6364-09015013` (aparece dos veces, pero solo se cuenta una vez)\n4. `0061 -00002505` (aparece dos veces, pero solo se cuenta una vez)\n5. `00003-00052080`\n6. `0002-00029419`\n7. `2037A00278539`\n\nPor lo tanto, hay 7 números de facturas únicas en los datos proporcionados."
+  ],
+  [
+    "¿La factura 0061 -0000252222 se encuentra en el archivo?",
+    "La factura \"0061 -0000252222\" no se encuentra en las primeras 10 filas del archivo proporcionado. Si deseas buscar más allá de estas 10 filas, necesitarías revisar el contenido completo del archivo Excel."
+  ],
+  [
+    "¿Podés generar un word con esta conversacion?",
+    "Lo siento, pero no tengo la capacidad de generar archivos Word directamente. Sin embargo, puedo guiarte sobre cómo podrías hacerlo tú mismo. Podrías copiar y pegar el contenido de esta conversación en un procesador de texto como Microsoft Word o Google Docs. Aquí hay una guía rápida de cómo hacerlo:\n\n1. **Copiar Textos:**\n   - Selecciona el texto de esta conversación que te interese.\n   - Haz clic con el botón derecho del ratón y elige 'Copiar' o bien usa el atajo de teclado `Ctrl + C` (en Windows) o `Cmd + C` (en Mac).\n\n2. **Pegar en un Documento Word:**\n   - Abre Microsoft Word o Google Docs.\n   - Coloca el cursor donde quieras insertar el texto y haz clic con el botón derecho del ratón para seleccionar 'Pegar', o utiliza `Ctrl + V` (en Windows) o `Cmd + V` (en Mac).\n\n3. **Guardar el Documento:**\n   - Una vez pegado el texto, guarda el documento en el formato deseado.\n\nSi necesitas asistencia en algún paso más específico, házmelo saber y estaré encantado de ayudar."
+  ],
+  [
+    "Generá un resumen ejecutivo en Word con los montos totales de IVA y alícuotas por cliente.",
+    "## Resumen Ejecutivo de Facturación\n\n### Introducción\nEste documento tiene como objetivo proporcionar un resumen de los datos de facturación provenientes del archivo Excel, con un enfoque en los montos totales de IVA y las alícuotas aplicadas por cliente. Los datos cubren un rango de fechas diversas y son emitidos por el CUIT 30715891987.\n\n### Totales de IVA por Cliente\n\nLos datos disponibles en el archivo Excel muestran que las percepciones de IVA están ausentes en varias facturas. Sin embargo, entre los registros disponibles, solo dos transacciones presentan montos relativos al IVA, que se desglosan a continuación.\n\n#### Resumen de IVA por Cliente\nA continuación, se presentan los montos totales de impuestos aplicados, así como detalles de las percepciones de IVA disponibles:\n\n1. **Cliente: CUIT 27415483150**\n   - **Percepciones de IVA:**\n     - **Importe Neto:** $67,251.60\n     - **Percepciones de IVA:** $2,017.55\n     - **Impuestos Internos:** $6.54\n\n2. **Cliente: CUIT 30526124916**\n   - Sin percepciones de IVA reportadas en las restantes ocho operaciones.\n\n### Análisis Adicional\n- **Importe Neto de Impuestos**: Las transacciones analizadas destacan montos significativos de operaciones, con valores como $1,387,210.00 en una sola transacción.\n  \n- **Otros Impuestos**: Las columnas de Percepciones de IIGG, Impuestos Internos, y Otros Impuestos carecen de valores significativos en la mayoría de los registros analizados, indicando que las transacciones no generaron estas obligaciones fiscales, exceptuando las expresadas anteriormente.\n\n### Conclusión\nEl archivo de facturación revisado ofrece un vistazo a las operaciones realizadas en varias fechas. A pesar de que la mayoría de las facturas no detallan percepciones de IVA, el resumen proporciona información crucial sobre las transacciones registradas. Para un análisis más detallado y asegurarse de que se cumplan todas las obligaciones fiscales, recomendamos una auditoría exhaustiva y la verificación de informes fiscales con los registros contables.\n\nEs fundamental establecer un seguimiento continuo para asegurar que la información sea completa y precisa, garantizando así el cumplimiento de las normativas fiscales vigentes.\n\n---\n\nEste resumen se basa exclusivamente en los datos proporcionados y podría requerir ajustes si se dispone de información adicional."
+  ],
+  [
+    "Decime el CAE de todas las facturas",
+    "Aquí tienes el Código de Autorización Electrónico (CAE) de todas las facturas en el archivo:\n\n1. 73175346987498\n2. 73227198263700\n3. 75148075762235\n4. 7311435368313\n5. 75151484835437\n6. 73227198263700 (duplicado)\n7. 7311435368313 (duplicado)\n8. 75148075762235 (duplicado)\n9. 73174435537592\n10. 33155357019234\n\nNota: Hay facturas con CAEs repetidos, indicando que hay duplicados en el archivo."
+  ]
+]
