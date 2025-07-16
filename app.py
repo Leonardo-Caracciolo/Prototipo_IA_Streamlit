@@ -6,7 +6,7 @@ from ui.main_chat import chat
 st.set_page_config(layout='wide')
 sidebar()
 
-st.title("AI KnowledgeHub")
+st.title("TaxMiner")
 
 query_params = st.query_params
 

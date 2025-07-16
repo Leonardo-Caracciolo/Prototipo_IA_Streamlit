@@ -501,7 +501,7 @@ def chat(workspace):
             st.success("📄 Documento Word generado.")
 
         elif "generá un excel" in prompt.lower() and "[" in respuesta:
-            try:
+            try:#Ver de pasar el input a string o cambiar el input (postgreSQL)
                 tabla = eval(respuesta.strip())  # asumir que es una lista de listas o dicts
                 archivo = ejecutar_mcp("generar_excel", nombre_archivo="reporte_tabla", tabla=tabla, workspace=workspace)
                 st.success("📊 Archivo Excel generado.")
