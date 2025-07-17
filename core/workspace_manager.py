@@ -25,3 +25,18 @@ def delete_workspace(slug):
         shutil.rmtree(path)
         return True
     return False
+
+
+def detectar_tipo_workspace(workspace_slug: str) -> str:
+    path = os.path.join(BASE_PATH, workspace_slug)
+    tiene_sql = os.path.exists(os.path.join(path, "sql"))
+    tiene_vector = os.path.exists(os.path.join(path, "vectorstore"))
+
+    if tiene_sql and tiene_vector:
+        return "mixto"
+    elif tiene_sql:
+        return "sql"
+    elif tiene_vector:
+        return "vectorial"
+    else:
+        return "vacío"

@@ -22,38 +22,56 @@
 
 ```
 AI_KnowledgeHub/
-├── app.py                  # Punto de entrada principal (Streamlit)
-├── .env                    # Claves API (OPENAI_API_KEY, MODEL_NAME)
-├── requirements.txt        # Librerías necesarias
+├── app.py                         # Punto de entrada principal (Streamlit)
+├── .env                           # Claves API y configuración
+├── requirements.txt               # Dependencias necesarias
 
-├── core/
-│   ├── workspace_manager.py    # Crear/eliminar workspaces
-│   ├── file_handler.py         # Guardado de archivos por workspace
-│   ├── vectorizer.py           # Procesamiento y embeddings
-│   ├── rag_pipeline.py         # Consulta a vectores (QA)
-│   ├── history.py              # Manejo de historial JSON
-│   ├── mcp_runner.py           # Ejecución de MCPs desde prompts
+├── core/                          # Núcleo del sistema
+│   ├── workspace_manager.py           # Crear/eliminar workspaces
+│   ├── file_handler.py                # Guardado de archivos y monitoreo
+│   ├── vectorizer.py                  # Procesamiento y vectorización (FAISS/pgvector)
+│   ├── rag_pipeline.py                # Función buscar_en_documentos() para RAG
+│   ├── sql_pipeline.py                # Función buscar_en_sql() + carga Excel a SQL
+│   ├── history.py                     # Historial por workspace
+│   ├── mcp_runner.py                  # Ejecuta MCP desde prompts
+│   ├── agente_backend.py              # Orquestador principal de agentes  ✅ NUEVO
+│   ├── saludo_agente.py               # Agente intermedio para saludo y filtro       ✅ NUEVO
+│   └── agente.py                      # Factories o abstracciones de agentes         ✅ NUEVO
 
-├── ui/
-│   ├── sidebar.py              # Navegación lateral y creación de workspaces
-│   ├── file_uploader.py        # Módulo de subida de archivos
-│   ├── main_chat.py            # Lógica de chat, GPT-4o, procesamiento
-│
-├── utils/
-│   ├── excel_analyzer.py       # Carga, resumen y contexto para archivos Excel
-│   ├── voz_a_prompt.py         # Reconocimiento de voz a texto
+├── ui/                           # Interfaz de usuario (Streamlit)
+│   ├── sidebar.py                   # Lateral izquierdo con selección de workspaces
+│   ├── file_uploader.py             # Subida de archivos con monitoreo
+│   └── main_chat.py                 # Lógica del chat principal
 
-├── mcps/                   # Plugins dinámicos ejecutables desde el prompt
-│   ├── generar_word.py         # Genera Word desde texto
-│   ├── generar_excel.py        # Genera Excel desde tabla (formato lista)
+├── utils/                        # Funciones auxiliares
+│   ├── excel_analyzer.py            # Resumen y contexto inicial de Excel
+│   ├── voz_a_prompt.py              # Conversión de voz a texto
+│   └── sql_connector.py             # Conexión SQL por workspace (SQLite o Postgre)
 
-└── storage/
+├── agents/                      # Agentes específicos
+│   ├── agente_sql_excel.py          # Agente SQL para archivos Excel
+│   ├── agente_postgre_pgvector.py   # Agente RAG para pgvector / PostgreSQL
+│   └── saludo_agente.py             # Repetido para compatibilidad directa
+
+├── langgraph_flows/             # Flujos LangGraph
+│   ├── base_sql.graph.py            # Flujo para SQL
+│   └── base_rag.graph.py            # Flujo para documentos largos RAG
+
+├── mcps/                         # Plugins dinámicos (desde prompt)
+│   ├── generar_word.py              # Crear Word desde texto
+│   ├── generar_excel.py             # Crear Excel desde tabla
+│   └── resumen_excel.py             # Genera resumen automático del Excel
+
+└── storage/                     # Datos persistentes
     └── workspaces/
-        └── <nombre_workspace>/
-            ├── documents/          # Archivos cargados (PDF, Word, Excel)
-            ├── vectorstore/        # Embeddings persistentes
-            ├── history.json        # Historial de chat por workspace
-            ├── threads/            # (Opcional) Subconversaciones
+        └── <workspace_name>/
+            ├── documents/              # Archivos subidos
+            ├── vectorstore/            # FAISS o pgvector
+            ├── sql/                    # Base SQLite del workspace
+            ├── output/                 # Archivos Word/Excel generados
+            ├── history.json            # Historial del chat
+            └── threads/                # Conversaciones separadas por hilo (opcional)
+
 ```
 
 ---
@@ -77,7 +95,3 @@ El sistema puede escalar fácilmente a:
 - RAG avanzado, chunking dinámico, embedding personalizado
 
 ---
-
-## 📌 Autor
-
-Desarrollado por **Leonardo** con enfoque profesional, extensible y robusto para automatización contable, análisis documental e inteligencia aumentada.
