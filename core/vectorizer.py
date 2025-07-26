@@ -1,51 +1,11 @@
-# import os
-# from langchain.document_loaders import PyPDFLoader, UnstructuredExcelLoader
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain.embeddings import OpenAIEmbeddings
-# from langchain.vectorstores import FAISS
-# from dotenv import load_dotenv
-
-# load_dotenv()
-# EMBEDDING_MODEL = OpenAIEmbeddings()
-
-# def cargar_documentos(workspace, tipo="documents"):
-#     ruta = f"storage/workspaces/{workspace}/{tipo}"
-#     docs = []
-#     for nombre in os.listdir(ruta):
-#         path = os.path.join(ruta, nombre)
-#         if nombre.endswith(".pdf"):
-#             loader = PyPDFLoader(path)
-#             docs.extend(loader.load())
-#         elif nombre.endswith((".xls", ".xlsx", ".xlsm")):
-#             loader = UnstructuredExcelLoader(path)
-#             docs.extend(loader.load())
-#     return docs
-
-# def aplicar_chunking(docs, chunk_size=500, overlap=50):
-#     splitter = RecursiveCharacterTextSplitter(
-#         chunk_size=chunk_size,
-#         chunk_overlap=overlap
-#     )
-#     return splitter.split_documents(docs)
-
-# def crear_vectorstore(workspace, docs_chunked):
-#     vectorstore_path = f"storage/workspaces/{workspace}/vectorstore"
-#     if not os.path.exists(vectorstore_path):
-#         os.makedirs(vectorstore_path)
-#     vectordb = FAISS.from_documents(docs_chunked, EMBEDDING_MODEL)
-#     vectordb.save_local(vectorstore_path)
-
-# def get_vector_store_for_workspace(workspace):
-#     path = f"storage/workspaces/{workspace}/vectorstore"
-#     return FAISS.load_local(path, EMBEDDING_MODEL, allow_dangerous_deserialization=True)
-
-
 import os
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from dotenv import load_dotenv
 
+load_dotenv()
 EMBEDDING_MODEL = OpenAIEmbeddings()
 
 # def cargar_documentos(workspace):

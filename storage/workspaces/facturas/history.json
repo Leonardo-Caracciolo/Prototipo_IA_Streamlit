@@ -1,0 +1,10 @@
+[
+  [
+    "¿Cuántas filas hay?",
+    "Hay 450 filas en la tabla \"facturas_facturas\"."
+  ],
+  [
+    "resaltá las facturas duplicadas",
+    "En el análisis del archivo de Excel proporcionado, las facturas duplicadas pueden ser identificadas al observar que las facturas con el mismo \"Nro. de Factura\", \"Fecha de Recepcion\" y otros detalles relevantes tienen múltiples entradas en este registro. A continuación, presento el resumen de las facturas duplicadas encontradas en las primeras 100 filas examinadas:\n\n1. Factura Nro. **9971-96053030**\n   - Emisor: Jacinto Ortuño Aguado\n   - Apócrifa: Sí\n   \n2. Factura Nro. **2197-61721777**\n   - Emisor: Leandra Sotelo Pereira\n   - Apócrifa: Sí\n\n3. Factura Nro. **0789-20544750**\n   - Emisor: Porfirio Arenas Miralles\n   - Apócrifa: Sí\n\n4. Factura Nro. **5269-54897865**\n   - Emisor: Olimpia Bernad\n   - Apócrifa: Sí\n\n5. Factura Nro. **8845-39584166**\n   - Emisor: Rico Tudela Villena\n   - Apócrifa: No\n\n6. Factura Nro. **8948-95152689**\n   - Emisor: Andrés Prudencio Madrid Agudo\n   - Apócrifa: No\n\n7. Factura Nro. **2544-35365982**\n   - Emisor: Andrés Felipe Torrent-Ortega\n   - Apócrifa: No\n\nEstas son algunas de las facturas que aparecen más de una vez según estos documentos. Sin embargo, es crucial revisar las 450 filas completas para encontrar todos los duplicados. Es recomendable hacer una búsqueda usando el número de factura como indicador principal y después verificar otros campos como el CAE, fecha de recepción, y estado de autorización para confirmar que verdaderamente sean duplicados y no variaciones legítimas entradas más de una vez por diferentes motivos."
+  ]
+]

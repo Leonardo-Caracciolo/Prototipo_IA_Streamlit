@@ -1,15 +1,3 @@
-# import pandas as pd
-# import os
-
-# def run(nombre_archivo: str, tabla: list, workspace: str):
-#     df = pd.DataFrame(tabla[1:], columns=tabla[0])  # tabla = [header, fila1, fila2, ...]
-
-#     path_output = f"storage/workspaces/{workspace}/output"
-#     os.makedirs(path_output, exist_ok=True)
-#     file_path = os.path.join(path_output, f"{nombre_archivo}.xlsx")
-#     df.to_excel(file_path, index=False)
-#     return file_path
-
 import os
 import openpyxl
 from openpyxl.utils import get_column_letter
