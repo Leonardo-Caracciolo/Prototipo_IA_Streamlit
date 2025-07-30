@@ -1,6 +1,6 @@
-# 🧠 AI KnowledgeHub
+# 🧠 TaxMind
 
-**AI KnowledgeHub** es una plataforma inteligente para contadores, analistas y profesionales que permite subir archivos (Excel, PDF, Word) y realizar consultas complejas directamente sobre su contenido utilizando el modelo **GPT-4o** de OpenAI. Es modular, escalable y lista para integrarse con agentes inteligentes, RAG y plugins personalizados.
+**TaxMind** es una plataforma inteligente para contadores, analistas y profesionales que permite subir archivos (Excel, PDF, Word) y realizar consultas complejas directamente sobre su contenido utilizando el modelo **GPT-4o** de OpenAI. Es modular, escalable y lista para integrarse con agentes inteligentes, RAG y plugins personalizados.
 
 ---
 
@@ -23,7 +23,7 @@
 ## 📂 Estructura del proyecto
 
 \`\`\`
-AI_KnowledgeHub/
+Prototipo_IA/
 ├── app.py                       # Punto de entrada principal (Streamlit)
 ├── monitor.py                   # Monitor que observa cambios en carpetas
 ├── .env                         # Claves API y DB (OPENAI_API_KEY, DB_URL, MODEL_NAME)

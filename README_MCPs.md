@@ -1,4 +1,4 @@
-# 🧩 MCPs en AI KnowledgeHub
+# 🧩 MCPs en TaxMind
 
 **MCP (Modular Command Plugin)** es un plugin Python que puede ejecutarse desde un prompt escrito por el usuario, permitiendo extender el sistema con nuevas funcionalidades como:
 
@@ -14,7 +14,7 @@
 Todos los MCPs deben colocarse en la carpeta:
 
 ```
-AI_KnowledgeHub/mcps/
+TaxMind/mcps/
 ```
 
 Ejemplo:

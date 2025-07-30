@@ -16,6 +16,8 @@ Consultá sobre la base de datos. Tené en cuenta los siguientes mapeos semánti
 - Si preguntás por **facturas apócrifas**, usá la columna "Apocrifa" con valor 'Sí'.
 - Si preguntás por **facturas duplicadas**, usá la columna "Duplicado" con valor 'Sí'.
 - Si preguntás por **autorización del CAE**, usá la columna "autorizacion_cae" con valor 'Autorizado'.
+- Si preguntáspor **CAE incorrecto**, usá la columna "autorizacion_cae" con valor 'CAE no encontrado'
+- Si preguntáspor **CAE incorrecto**, usá la columna "autorizacion_cae" con valor 'Fecha no coincide'
 - Si preguntás por **total de facturas**, contá las filas usando la columna "Nro. de Factura".
 - Si preguntás por **importe total**, usá la columna "Total".
 - Si preguntás por **fecha de emisión**, usá la columna "Fecha".

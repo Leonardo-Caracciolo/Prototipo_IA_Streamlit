@@ -18,3 +18,4 @@ openai-whisper
 pipwin
 langchain
 langchain-openai
+psycopg2
