@@ -126,20 +126,3 @@ python monitor.py
 \`\`\`
 
 > 🔁 Este script observará las carpetas de los workspaces activos. Cuando detecte un archivo nuevo, actualizará automáticamente el vectorstore o cargará el Excel a SQL.
-
----
-
-## 🔧 Escalable a futuro
-
-AI KnowledgeHub está diseñado para integrarse fácilmente con:
-
-- Agentes LLM (`LangChain Agents`, `AnythingLLM`, `LangGraph`)
-- RAG avanzado con pgvector + PostgreSQL
-- Backend robusto (`FastAPI`, `Django`, `Flask`)
-- API REST, interfaces móviles, frontend React, dashboards, etc.
-
----
-
-## 📌 Autor
-
-Desarrollado por **Leonardo** con enfoque profesional, extensible y robusto para automatización contable, análisis documental e inteligencia aumentada.

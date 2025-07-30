@@ -25,7 +25,7 @@ def run(workspace: str, historial: list) -> str:
         p_pregunta.add_run(pregunta)
 
         p_respuesta = doc.add_paragraph()
-        p_respuesta.add_run("🤖 GPT-4o: ").bold = True
+        p_respuesta.add_run("🤖 TaxMind: ").bold = True
         p_respuesta.add_run(respuesta)
 
         doc.add_paragraph("—" * 30)

@@ -136,4 +136,3 @@ Para mantener orden modular por workspace.
 ---
 
 ¿Querés agregar un nuevo tipo de MCP (por ejemplo, envío de mail, generación de gráficos, análisis financiero)? Solo tenés que crear el `.py` con la función `run()` y usar `ejecutar_mcp`.
-

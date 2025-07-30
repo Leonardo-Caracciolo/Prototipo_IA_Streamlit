@@ -1,10 +1,154 @@
 [
   [
-    "¿Cuántas filas hay?",
-    "Hay 450 filas en la tabla \"facturas_facturas\"."
+    "¿Cuántas filas tiene el archivo?",
+    "El archivo tiene 450 filas."
+  ],
+  [
+    "¿Cuántas filas tiene el archivo?",
+    "El archivo tiene 460 filas."
+  ],
+  [
+    "¿Cuantas facturas duplicadas hay?",
+    "Hay 216 facturas duplicadas."
+  ],
+  [
+    "¿Cuantas facturas apócrifas hay?",
+    "Para determinar cuántas facturas apócrifas hay en el archivo, revisaremos la columna \"Apocrifa\". En las primeras 100 filas que has incluido en la vista previa, hay un marcador de \"Sí\" en la columna \"Apocrifa\" para aquellas facturas que son identificadas como apócrifas. Voy a contarlas:\n\n1. Jacinto Ortuño Aguado\n2. Leandra Sotelo Pereira\n3. Olimpia Bernad\n4. Vilma Ana Belén Verdugo Uribe\n5. Socorro Ibáñez Armas\n6. Francisco Javier Román Baños\n7. Ibán Mir Company\n8. María Carmen Sabina Jáuregui Quero\n9. Chus Bou Bonilla\n10. Julio Peiró Sandoval\n\nDe las primeras 100 filas, hay 10 facturas marcadas como apócrifas. Para determinar el total en todo el archivo de 460 filas, se debería aplicar un proceso similar a las filas restantes."
+  ],
+  [
+    "¿Cuantas facturas apocrifas hay?",
+    "Hay 217 facturas apócrifas."
+  ],
+  [
+    "¿Cuál es el total de facturas?",
+    "El total de facturas es 460."
+  ],
+  [
+    "y?",
+    "Agent stopped due to iteration limit or time limit."
+  ],
+  [
+    "cual es el total de facturas?",
+    "El total de facturas es 460."
+  ],
+  [
+    "Decime la categoría del emisor",
+    "La categoría del emisor, según las primeras 100 filas del archivo proporcionado, es \"I.V.A. RESPONSABLE INSCRIPTO\". Esta categoría se repite consistentemente en cada fila correspondiente al \"Cuit del Emisor\"."
+  ],
+  [
+    "Decime el CAE de las facturas apocrifas",
+    "Las facturas apócrifas según la muestra de las primeras 100 filas son las siguientes:\n\n1. Jacinto Ortuño Aguado <seguidario@duran-boix.es>: CAE 94645120812686\n2. Leandra Sotelo Pereira <felipe22@yahoo.com>: CAE 46933608777873\n3. Olimpia Bernad <danzamora@hotmail.com>: CAE 2811470550288\n4. Rico Tudela Villena <ullobet@hotmail.com>: CAE 29438818844710\n5. Reyes Tejedor Pozo <gomisana-sofia@rico.org>: CAE 70477848982875\n\nEstos son los CAEs correspondientes a las facturas marcadas como apócrifas en esta muestra inicial."
+  ],
+  [
+    "¿Cuántas facturas duplicadas hay?",
+    "Hay 216 facturas duplicadas."
+  ],
+  [
+    "decime el total",
+    "El total es 229,135,817.96."
+  ],
+  [
+    "¿Cuantas facturas duplicadas hay?",
+    "Hay 216 facturas duplicadas."
+  ],
+  [
+    "Generá un resumen de esta conversacion",
+    "Agent stopped due to iteration limit or time limit."
+  ],
+  [
+    "Generá un excel y resaltá las facturas duplicadas",
+    "Para identificar y resaltar las facturas duplicadas en el archivo Excel, primero debemos filtrar aquellas filas con números de factura que aparecen más de una vez.\n\nPara esto, puedes seguir los pasos detallados a continuación:\n\n1. **Importar los datos a Excel:**\n   - Abre Excel e importa los datos proporcionados.\n\n2. **Identificar duplicados:**\n   - Selecciona la columna \"Nro. de Factura\" que contiene los números de factura.\n   - Ve a la pestaña \"Datos\" y selecciona \"Quitar duplicados\" para remover duplicados si fuera necesario detectar las filas resaltando solo aquellos duplicados.\n\n3. **Usar formato condicional para resaltar duplicados:**\n   - Selecciona la columna \"Nro. de Factura\".\n   - En la pestaña \"Inicio\", haz clic en \"Formato condicional\".\n   - Elige \"Reglas para resaltar celdas\" y luego \"Duplicar valores\".\n   - Aparecerá un cuadro de diálogo que te permitirá elegir un formato para resaltar los duplicados. Escoge uno que los haga destacar claramente, como un relleno de celda de color amarillo claro o texto en negrita y color rojo.\n\n4. **Revisar y guardar:**\n   - Revisa las filas destacadas para confirmar que los valores se han identificado correctamente como duplicados.\n   - Guarda el archivo como un nuevo Excel, asegurándote de que los cambios se mantengan.\n\nCon estos pasos, lograrás tener un archivo Excel donde las facturas duplicadas estarán claramente resaltadas para ayudarte con el análisis o auditoría requerida."
+  ],
+  [
+    "generá un word con el resumen de esta conversacion",
+    "Agent stopped due to iteration limit or time limit."
+  ],
+  [
+    "¿Cuantas facturas hay?",
+    "Hay 460 facturas en total."
+  ],
+  [
+    "¿cuantas facturas duplicadas hay?",
+    "Hay 216 facturas duplicadas."
+  ],
+  [
+    "¿Cuantas facturas apocrifas hay?",
+    "Para determinar cuántas facturas apócrifas hay, debemos revisar la columna \"Apocrifa\" y contar cuántas entradas tienen el valor \"Sí\".\n\nSegún los datos proporcionados, todas las entradas visualizadas (en las primeras 100 filas) tienen algún campo con el valor \"Sí\" en la columna \"Apocrifa\", excepto cuando aparece \"nan\". Sin embargo, dado que has mencionado que estás utilizando el archivo completo que contiene 460 filas, necesitaría procesar el archivo completo para obtener un número exacto.\n\nComo eres tú quien tiene acceso completo al archivo, te recomendaría usar una función de conteo en Excel para contar cuántas veces aparece \"Sí\" en la columna \"Apocrifa\". Una fórmula rápida que puedes usar en Excel es el uso de la función `COUNTIF`. Si tu columna \"Apocrifa\" es la columna `AF`, por ejemplo, podrías usar la siguiente fórmula:\n\n```excel\n=COUNTIF(AF1:AF460, \"Sí\")\n```\n\nEsta fórmula te dará el total de facturas apócrifas en tu archivo."
+  ],
+  [
+    "¿Cuántas facturas Apócrifas hay?",
+    "No hay facturas marcadas como Apócrifas."
+  ],
+  [
+    "cuantas facturas totales hay?",
+    "Hay un total de 460 facturas."
+  ],
+  [
+    "¿Cuántas facturas Apocrifas hay?",
+    "Hay 0 facturas apócrifas."
+  ],
+  [
+    "y totales?",
+    "The total sum of the \"Total\" column in the \"facturas_facturas\" table is 229,135,817.96."
+  ],
+  [
+    "¿Cuantas facturas apócrifas hay?",
+    "En las primeras 100 filas del archivo, he identificado algunas facturas marcadas como \"Apócrifa\". Las facturas apócrifas son aquellas que tienen la columna \"Apocrifa\" marcada como \"Sí\".\n\nEn las primeras 100 filas, se observa que la columna \"Apocrifa\" tiene el valor \"Sí\" en varias celdas. Puedes contar estos valores \"Sí\" para determinar cuántas facturas apócrifas hay en estas filas.\n\nPor favor, para obtener el número total de facturas apócrifas en el archivo completo de 460 filas, deberías contar las entradas con \"Sí\" en la columna \"Apocrifa\" en el archivo completo. \n\nSin embargo, con la información proporcionada en las primeras 100 filas, se puede contar un total de 26 facturas marcadas como apócrifas."
+  ],
+  [
+    "¿Cuántas facturas apócrifas hay en total?",
+    "Hay un total de 216 facturas apócrifas."
+  ],
+  [
+    "generá un resumen word de esta conversacion",
+    "I cannot directly generate a Word document, but I can provide a text summary of our conversation. You can then copy this summary into a Word document:\n\n1. You asked me to answer questions using a specific tool, PostgreSQL, to query a database table named \"facturas_facturas\" in the 'facturas' workspace.\n2. I provided guidance on how to format SQL queries using double quotes for column names.\n3. You requested a Word summary of our conversation.\n\nIf you need further assistance or specific information from the database, please let me know!"
+  ],
+  [
+    "generá un word que contenga el resumen de esta conversacion",
+    "Agent stopped due to iteration limit or time limit."
   ],
   [
     "resaltá las facturas duplicadas",
-    "En el análisis del archivo de Excel proporcionado, las facturas duplicadas pueden ser identificadas al observar que las facturas con el mismo \"Nro. de Factura\", \"Fecha de Recepcion\" y otros detalles relevantes tienen múltiples entradas en este registro. A continuación, presento el resumen de las facturas duplicadas encontradas en las primeras 100 filas examinadas:\n\n1. Factura Nro. **9971-96053030**\n   - Emisor: Jacinto Ortuño Aguado\n   - Apócrifa: Sí\n   \n2. Factura Nro. **2197-61721777**\n   - Emisor: Leandra Sotelo Pereira\n   - Apócrifa: Sí\n\n3. Factura Nro. **0789-20544750**\n   - Emisor: Porfirio Arenas Miralles\n   - Apócrifa: Sí\n\n4. Factura Nro. **5269-54897865**\n   - Emisor: Olimpia Bernad\n   - Apócrifa: Sí\n\n5. Factura Nro. **8845-39584166**\n   - Emisor: Rico Tudela Villena\n   - Apócrifa: No\n\n6. Factura Nro. **8948-95152689**\n   - Emisor: Andrés Prudencio Madrid Agudo\n   - Apócrifa: No\n\n7. Factura Nro. **2544-35365982**\n   - Emisor: Andrés Felipe Torrent-Ortega\n   - Apócrifa: No\n\nEstas son algunas de las facturas que aparecen más de una vez según estos documentos. Sin embargo, es crucial revisar las 450 filas completas para encontrar todos los duplicados. Es recomendable hacer una búsqueda usando el número de factura como indicador principal y después verificar otros campos como el CAE, fecha de recepción, y estado de autorización para confirmar que verdaderamente sean duplicados y no variaciones legítimas entradas más de una vez por diferentes motivos."
+    "Para identificar las facturas duplicadas en este archivo Excel, podemos buscar filas donde el \"Nro. de Factura\" es idéntico en más de una fila. Aquí tienes un resumen de las facturas que se marcan como duplicadas en las primeras 100 filas:\n\n1. **Factura Nro. 9971-96053030:** Marcada como duplicada.\n2. **Factura Nro. 5269-54897865:** Marcada como duplicada.\n3. **Factura Nro. 8845-39584166:** Marcada como duplicada.\n4. **Factura Nro. 8022-89590180:** Marcada como duplicada.\n5. **Factura Nro. 7953-93660733:** Marcada como duplicada.\n6. **Factura Nro. 9195-66623071:** Marcada como duplicada.\n\nEstas entradas tienen en común que poseen el mismo número de factura y están marcadas con \"Sí\" en la columna \"Duplicado\". Esto indica que son duplicadas en el contexto del archivo presentado. \n\nEs importante revisar las características de estas entradas en tu archivo Excel para confirmar si esta duplicación es un error o si, por ejemplo, representa un envío múltiple de la misma factura. Esto puede deberse a reenvíos de facturas o errores en el proceso de registro."
+  ],
+  [
+    "genéra un excel que resalte las facturas duplicadas",
+    "Para generar un Excel que resalte las facturas duplicadas basándonos en la información proporcionada, es necesario seguir estos pasos. Dado que no puedo generar directamente un archivo Excel en este entorno, te guiaré con los pasos necesarios para hacerlo en Microsoft Excel:\n\n1. **Abrir el archivo en Excel**: \n   - Asegúrate de que tienes el archivo abierto en Microsoft Excel con todas las columnas mencionadas.\n\n2. **Seleccionar la columna de identificación**:\n   - En este caso, puede ser la columna \"Nro. de Factura\" que identifica cada factura de manera única.\n\n3. **Usar la función de formato condicional**:\n   - Con la columna de número de factura seleccionada, ve a la pestaña \"Inicio\" en la cinta de Microsoft Excel.\n   - Clic en \"Formato condicional\" en el grupo \"Estilos\".\n   - Selecciona \"Nueva regla\".\n\n4. **Configurar una regla para resaltar duplicados**:\n   - En el cuadro \"Nueva regla de formato\", selecciona \"Formato de celdas que contienen\".\n   - En la lista desplegable, selecciona \"Valores duplicados\".\n   - Puedes elegir un formato para resaltar, como cambiar el color de fondo o el color del texto (por ejemplo, un rojo brillante o cualquier color que resulte visible).\n\n5. **Aplicar y revisar**:\n   - Haz clic en \"Aceptar\" para aplicar la regla.\n   - Excel resaltará automáticamente los números de factura que se repitan, indicando así las facturas duplicadas.\n\n6. **Verificación manual**:\n   - Después de que Excel haya resaltado los duplicados, revisa manualmente los datos para asegurarte de que la identificación ha sido correcta. \n\n7. **Opcional - Filtrar o agrupar duplicados para análisis**:\n   - Puedes usar la función de filtro (en la pestaña \"Datos\") para mostrar únicamente los elementos duplicados o usar la función \"Quitar duplicados\" para identificarlos en otro archivo antes de eliminar cualquier redundancia accidental.\n\nSiguiendo estos pasos, tendrás un Excel que resalta visualmente las facturas duplicadas para un análisis más fácil."
+  ],
+  [
+    "generá un word que contenga el resumen de esta conversacion",
+    "Agent stopped due to iteration limit or time limit."
+  ],
+  [
+    "resaltá en el excel las facturas duplicadas",
+    "Para identificar y resaltar las facturas duplicadas en el archivo, se pueden seguir los siguientes pasos:\n\n1. Abre el archivo en Excel o en una hoja de cálculo similar.\n2. **Crear una columna auxiliar**: Añade una nueva columna al final de tus datos, por ejemplo \"Combinación Única\".\n3. **Generar valores únicos**: En cada celda de esta nueva columna, usa una fórmula que combine las características clave de cada factura que deberían hacerla única. Por ejemplo, puedes concatenar \"Cuit del Emisor\", \"Tipo de documento\", \"Letra de comprobante\", \"Nro. de Factura\", y \"Fecha\". La fórmula podría verse así:\n   ```\n   =CONCATENAR(C7, D7, E7, F7, G7)\n   ```\n   Ajusta las letras de las celdas según su posición en tu archivo.\n\n4. **Buscar duplicados**:\n   - Selecciona la columna \"Combinación Única\".\n   - Ve a la pestaña \"Datos\" en el menú de Excel.\n   - Haz clic en \"Quitar duplicados\" si solo deseas eliminarlos, o\n   - Usa el \"Formato condicional\" > \"Resaltar reglas de celda\" > \"Valores duplicados...\", para resaltar las celdas duplicadas.\n\n5. **Revisar y almacenar resultados**: Los valores duplicados serán resaltados, lo cual te permitirá revisar estas filas para tomar acción, como eliminarlas o marcarlas para un análisis más detallado.\n\nNota: Revisar que la combinación de columnas elegida abarque todos los aspectos que harían de una factura un documento irrepetible, ya que esto afectará a la precisión de tu detección de duplicados."
+  ],
+  [
+    "resaltá en el excel las facturas duplicadas",
+    "Para resaltar las facturas duplicadas en el archivo Excel siguiendo la información proporcionada, puedes usar una función de búsqueda y formato condicional en Excel para identificar y resaltar dichas entradas. Aquí te indico los pasos generales para lograrlo:\n\n1. **Identificación de Duplicados**:\n   - Abre el archivo en Excel.\n   - Selecciona la columna \"Nro. de Factura\" porque el número de factura es el campo clave que parece indicar duplicados.\n\n2. **Uso de Formato Condicional**:\n   - Ve a la pestaña de \"Inicio\" en la barra de herramientas de Excel.\n   - Haz clic en \"Formato condicional\" y selecciona \"Nueva regla\".\n   - Escoge \"Formato solo de celdas que contienen\".\n   - En \"Valor de la celda\", selecciona \"Duplicar\".\n   - Selecciona el formato que deseas aplicar a las celdas duplicadas, como un relleno de color, texto en negrita, o un borde.\n\n3. **Aplicación de la Regla**:\n    - Aplica la regla sobre el rango que contiene los números de factura para que los duplicados queden resaltados.\n\n4. **Verificación Manual**:\n    - Después de haber resaltado los duplicados, revisa las entradas resaltadas para asegurar que se trata efectivamente de duplicados y que no haya errores en la duplicidad.\n\nSiguiendo estos pasos, podrás identificar rápidamente las facturas duplicadas en tu archivo Excel y proceder con la revisión necesaria para abordar cualquier discrepancia o problema de duplicidad que exista."
+  ],
+  [
+    "resaltá en el excel las facturas duplicadas",
+    "Para resaltar las facturas duplicadas en el archivo de Excel, sigue estos pasos:\n\n1. **Abre el archivo en Excel**: Abre el archivo en Excel donde tienes los datos, ya que esto te permitirá aplicar formato condicional de manera fácil.\n\n2. **Selecciona la columna de Nro. de Factura**: Identifica y selecciona la columna que contiene los números de las facturas, ya que esta es la clave para identificar duplicados.\n\n3. **Aplica formato condicional**:\n   - Ve a la pestaña `Inicio` en Excel.\n   - Haz clic sobre `Formato condicional` en el grupo `Estilos`.\n   - Selecciona `Nueva regla...`.\n   - En la ventana que aparece, selecciona `Usar una fórmula que determine las celdas para aplicar formato`.\n   - Escribe la fórmula: `=CONTAR.SI(A:A, A1)>1` (suponiendo que la columna A es la que contiene los números de facturas).\n   - Selecciona el formato de celda que desees aplicar para los duplicados, como un color de relleno específico, y haz clic en `Aceptar`.\n\n4. **Revisa los resultados**: Las celdas con números de factura que se repiten ahora deberían estar resaltadas en el color que seleccionaste, indicándote cuáles facturas están duplicadas.\n\nEste proceso permite que cualquier número de factura que se repita dentro de la columna correspondiente sea fácilmente visible gracias al formato que le apliques. Si la columna `Nro. de Factura` es distinta a la A, asegúrate de ajustar la fórmula y el rango en la fórmula adecuada (por ejemplo, si es la columna B, usa `=CONTAR.SI(B:B, B1)>1`)."
+  ],
+  [
+    "resaltá las facturas duplicadas",
+    "En el conjunto de datos proporcionado, se han marcado como duplicadas aquellas filas cuya columna \"Duplicado\" contiene el valor \"Sí\". Aquí están las facturas duplicadas destacadas:\n\n1. **Factura Nro. 9971-96053030**\n   - Emisor: Jacinto Ortuño Aguado\n   - Fecha de recepción: 08/07/2025\n\n2. **Factura Nro. 5269-54897865**\n   - Emisor: Olimpia Bernad\n   - Fecha de recepción: 29/06/2025\n\n3. **Factura Nro. 8845-39584166**\n   - Emisor: Rico Tudela Villena\n   - Fecha de recepción: 04/07/2025\n\n4. **Factura Nro. 8948-95152689**\n   - Emisor: Andrés Prudencio Madrid Agudo\n   - Fecha de recepción: 02/07/2025\n\n5. **Factura Nro. 7195-25511374**\n   - Emisor: Toribio de Donoso\n   - Fecha de recepción: 08/07/2025\n\nEstas facturas tienen la marca \"Sí\" en la columna \"Duplicado\", indicando que podrían ser registros duplicados dentro de tus datos. Para tomar acciones, podrías revisar la causa del duplicado y decidir si conservar una sola fila o investigar el origen del error."
+  ],
+  [
+    "Hola",
+    "Hola, ¿en qué te puedo ayudar?"
+  ],
+  [
+    "Generá un resumen en word que contenga todo el historial",
+    "Para crear un resumen en Word que contenga todo el historial del archivo descrito, se podría seguir un esquema similar al siguiente. A continuación, te proporciono un esquema del documento y los pasos que podrías seguir para generarlo:\n\n### Título del Documento\n**Resumen de Historial de Comprobantes de IVA**\n\n---\n\n### Introducción\nEste documento presenta un resumen detallado de un archivo que contiene información sobre 460 comprobantes de IVA enviados y recibidos por distintas empresas. Cada registro contiene varios detalles como el emisor, la fecha de recepción, el tipo de documento, las categorías de IVA, el domicilio del emisor y receptor, entre otros detalles.\n\n---\n\n### Sección 1: Detalles Generales del Archivo\n\n- **Total de registros:** 460\n- **Columnas:** \n  - Emisor_mail\n  - Fecha_Recepcion\n  - Archivo_Original\n  - Tipo de documento\n  - Letra de comprobante\n  - Nro. de Factura\n  - Fecha\n  - Cuit del Emisor\n  - Categoría en IVA Emisor\n  - Categoría en IIBB Emisor\n  - Domicilio Emisor\n  - Cuit del Receptor\n  - Categoría en IVA Receptor\n  - Categoría en IIBB Receptor\n  - Domicilio Receptor\n  - Código del servicio\n  - Detalle\n  - Importe neto de Impuestos\n  - Iva\n  - Percepciones de IVA\n  - Percepciones de IIGG\n  - Percepciones de Ingresos Brutos\n  - Impuestos Internos\n  - Otros Impuestos\n  - CAE\n  - Fecha del Vto. del CAE\n  - Periodo Facturado\n  - Total\n  - Total control\n  - Duplicado\n  - Recepcion de la factura\n  - Apocrifa\n  - Mis comprobantes\n  - Cuit Receptor Usuario\n  - autorizacion_cae\n\n---\n\n### Sección 2: Análisis de las Primeras 100 Filas\n\nEn esta sección, se analiza y destaca ciertos patrones y anomalías presentes en las primeras 100 filas del archivo.\n\n1. **General Observations:**\n   - Los emisores y receptores son, en su mayoría, categorizados como \"I.V.A. RESPONSABLE INSCRIPTO\".\n   - Algunos campos como \"Tipo de documento\" y \"Letra de comprobante\" están frecuentemente vacíos.\n   - El campo \"autorizacion_cae\" muestra valores variados como \"Fecha no coincide\", \"Autorizado\" y \"CAE no encontrado\".\n\n2. **Anomalías Notables:**\n   - Muchas de las filas tienen el campo \"Duplicado\" marcado como \"Sí\", lo que podría indicar la presencia de duplicados en ciertos registros.\n   - Varios registros contienen valores de \"autorizacion_cae\" que posiblemente sean erróneos, como \"Fecha no coincide\".\n\n---\n\n### Sección 3: Resumen de Errores Comunes y Anomalías Detectadas\n\n- **Errores en Fecha:**\n  - Varias fechas de los campos \"Fecha\" y \"Fecha del Vto. del CAE\" no coinciden, lo que puede ser un indicador de errores de procesamiento o mala entrada de datos.\n\n- **Campos Incompletos:**\n  - La mayoría de los registros carecen de información en los campos de percepciones de impuestos, y en la letra de comprobante.\n\n- **Autorización CAE:**\n  - Es relevante mencionar que un número significativo de registros en las primeras 100 filas presentan discrepancias o errores en el \"autorizacion_cae\".\n\n---\n\n### Sección 4: Conclusiones y Recomendaciones\n\nSe recomienda realizar una auditoría detallada de los datos para corregir errores en fechas y autorizar CAE para evitar problemas fiscales. Además, se sugiere la implementación de controles adicionales para verificar la integridad y precisión de los datos al momento de su ingreso.\n\n---\n\n**Apéndices:**\n- Incluir gráficos o tablas que muestren estadísticas clave del archivo, como número de errores por tipo o distribución de documentos por fecha.\n\nEste esquema puede ajustarse a medida que se obtenga más información del archivo completo. Luego, este esquema puede transferirse a un documento de Word para finalizar y presentar el resumen."
+  ],
+  [
+    "Generá un word",
+    "Agent stopped due to iteration limit or time limit."
+  ],
+  [
+    "resaltá las facturas que son duplicadas",
+    "Para identificar y resaltar las facturas duplicadas, podemos analizar la columna \"Nro. de Factura\". A continuación, resaltaré las facturas que aparecen más de una vez en las primeras 100 filas.\n\n1. **Identificación de Duplicados:**\n   - \"Nro. de Factura\" es el campo clave que vamos a comparar para detectar duplicados.\n\n2. **Resaltado de Facturas Duplicadas:**\n   - Revisemos las filas para encontrar aquellos números de factura que se repiten.\n\nAquí está la lista de las facturas duplicadas que identificamos:\n\n1. **Factura: 9971-96053030**\n   - Detalle en la fila 1.\n   - Aparece en múltiples registros (asegúrate en el dataset completo).\n\n2. **Factura: 2197-61721777**\n   - Detalle en la fila 2.\n   - Repite en otros contextos.\n\n3. **Factura: 0789-20544750**\n   - Detalle en la fila 3.\n   - Presenta apariciones repetidas.\n\nPara hacer un análisis exhaustivo, se procedería a realizar un cruce completo de valores en la columna \"Nro. de Factura\" y traer a la vista todos aquellos que se repitan con más de una ocurrencia. Cada vez que observas un mismo número de factura con detalles idénticos y/o diferentes puede indicar la existencia de un duplicado (intencionado o por error), importante para validaciones contables y auditorías internas. \n\nCon las herramientas adecuadas (por ejemplo, Excel o software de análisis de datos), se podrían filtrar y crear resúmenes que indiquen cifras y situaciones específicas de estos registros."
   ]
 ]

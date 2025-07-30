@@ -1,7 +1,17 @@
 @echo off
 title AI KnowledgeHub - Iniciando Plataforma
 echo -------------------------------------------
-echo   Iniciando Streamlit App y Monitor Watchdog
+echo   Activando entorno virtual y lanzando la app
 echo -------------------------------------------
-start cmd /k "streamlit run app.py"
-start cmd /k "python monitor.py"
+
+REM Ruta del proyecto
+cd /d "C:\Users\Usuario\Desktop\Proyectos\3 - AI_KnowledgeHub\AI_KnowledgeHub"
+
+REM Activar entorno virtual
+call .venv\Scripts\activate.bat
+
+REM Abrir Streamlit en una terminal
+start cmd /k "call .venv\Scripts\activate.bat && streamlit run app.py"
+
+REM Abrir Watchdog en otra terminal
+start cmd /k "call .venv\Scripts\activate.bat && python monitor.py"
