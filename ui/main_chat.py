@@ -50,7 +50,8 @@ def chat(workspace):
     # Mostrar historial en orden cronológico ascendente
     for pregunta, respuesta in st.session_state.chat_history:
         st.markdown(f"**🧑 Usuario:** {pregunta}")
-        st.markdown(f"**🤖 GPT-4o:** {respuesta}")
+        # st.markdown(f"**🤖 GPT-4o:** {respuesta}")
+        st.markdown(f"**🤖 TaxMiner:** {respuesta}")
         st.markdown("---")
 
     prompt = st.chat_input("Escribí tu pregunta...", key="chat_input_manual")

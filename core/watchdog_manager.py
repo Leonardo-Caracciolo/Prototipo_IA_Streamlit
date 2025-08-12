@@ -41,13 +41,13 @@ class WorkspaceHandler(FileSystemEventHandler):
             crear_vectorstore(self.workspace, chunks)
             self.log("✅ Vectorstore actualizado.")
 
-        elif self.tipo == "sql" and ext in [".xls", ".xlsx", ".xlsm"]:
-            self.log(f"📊 Excel detectado: {os.path.basename(path)} (cargando a PostgreSQL...)")
-            try:
-                resultado = cargar_excel_a_postgres(path, self.workspace, os.getenv("DB_URL"))
-                self.log(resultado)
-            except Exception as e:
-                self.log(f"❌ Error SQL: {e}")
+        # elif self.tipo == "sql" and ext in [".xls", ".xlsx", ".xlsm"]:
+        #     self.log(f"📊 Excel detectado: {os.path.basename(path)} (cargando a PostgreSQL...)")
+        #     try:
+        #         resultado = cargar_excel_a_postgres(path, self.workspace, os.getenv("DB_URL"))
+        #         self.log(resultado)
+        #     except Exception as e:
+        #         self.log(f"❌ Error SQL: {e}")
 
 def activar_watchdog_para_workspace(workspace):
     tipo = WORKSPACES_ACTIVOS.get(workspace)
