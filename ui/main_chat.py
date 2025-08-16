@@ -1,145 +1,137 @@
+# main_chat.py
+
 import streamlit as st
 import os
-from openai import OpenAI
+import re
 from dotenv import load_dotenv
-from core.vectorizer import cargar_documentos, aplicar_chunking, crear_vectorstore, cargar_vectorstore
-from utils.excel_analyzer import cargar_excel
+
+# LangChain y LangGraph imports
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+
+# Imports de tu proyecto
 from core.history import load_history, save_history
-from core.mcp_runner import ejecutar_mcp
+from core.graph_agent import app  # ¡Importamos el agente compilado!
 from utils.voz_a_prompt import escuchar_y_convertir
-from core.sql_loader import cargar_excel_a_postgres
-from core.sql_agent import crear_agente_sql
+from core.vectorizer import cargar_documentos, aplicar_chunking, crear_vectorstore
 
 load_dotenv()
-API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=API_KEY)
+
+def convertir_historial_a_mensajes(historial_tuplas: list[tuple]) -> list[BaseMessage]:
+    """Convierte el historial de (pregunta, respuesta) al formato de mensajes de LangChain."""
+    mensajes = []
+    for pregunta, respuesta in historial_tuplas:
+        mensajes.append(HumanMessage(content=pregunta))
+        mensajes.append(AIMessage(content=respuesta))
+    return mensajes
+
+def guardar_mensajes_a_historial(mensajes: list[BaseMessage]) -> list[tuple]:
+    """Convierte los mensajes de LangChain de vuelta a tuplas para guardarlos."""
+    historial_tuplas = []
+    # Iteramos de a pares (Humano, AI)
+    for i in range(0, len(mensajes), 2):
+        if i + 1 < len(mensajes) and isinstance(mensajes[i], HumanMessage) and isinstance(mensajes[i+1], AIMessage):
+            pregunta = mensajes[i].content
+            respuesta = mensajes[i+1].content
+            historial_tuplas.append((pregunta, respuesta))
+    return historial_tuplas
 
 
 def chat(workspace):
     st.subheader(f"💬 Chat para Workspace: {workspace}")
 
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = load_history(workspace)
+    # --- INICIALIZACIÓN DEL HISTORIAL (ADAPTADO) ---
+    if "messages" not in st.session_state:
+        # Cargamos el historial antiguo y lo convertimos al nuevo formato de objetos
+        historial_antiguo = load_history(workspace)
+        st.session_state.messages = convertir_historial_a_mensajes(historial_antiguo)
 
+    # --- LÓGICA DE PREPARACIÓN DEL WORKSPACE (SIN CAMBIOS) ---
+    # Esta parte sigue siendo útil para asegurar que los documentos estén procesados.
+    folder = f"storage/workspaces/{workspace}/documents"
+    if os.path.exists(folder):
+        nuevos_documentos = [os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith((".pdf", ".docx", ".xls", ".xlsx", ".xlsm"))]
+        if nuevos_documentos:
+            with st.spinner("Actualizando base de conocimiento..."):
+                documentos = cargar_documentos(workspace)
+                if documentos:
+                    chunks = aplicar_chunking(documentos)
+                    crear_vectorstore(workspace, chunks)
+            st.success("✅ Base de conocimiento actualizada.")
+            
+    # --- INTERFAZ DE USUARIO ---
     if st.button("🎙️ Escuchar voz y preguntar"):
         texto = escuchar_y_convertir()
-        st.session_state.chat_input_voz = texto
-        st.rerun()
+        if texto:
+            st.session_state.chat_input_voz = texto
+            st.rerun()
 
-    # ✅ Proceso automático: vectorización y carga a SQL
-    folder = f"storage/workspaces/{workspace}/documents"
-    archivos = [f for f in os.listdir(folder)] if os.path.exists(folder) else []
-    nuevos_documentos = []
+    # --- MOSTRAR HISTORIAL DE CHAT (ADAPTADO) ---
+    for message in st.session_state.messages:
+        role = "🧑 Usuario" if isinstance(message, HumanMessage) else "🤖 TaxMiner"
+        with st.chat_message(role):
+            st.markdown(message.content)
 
-    for archivo in archivos:
-        ext = archivo.lower().split(".")[-1]
-        if ext in ["pdf", "docx", "xls", "xlsx", "xlsm"]:
-            nuevos_documentos.append(os.path.join(folder, archivo))
-
-    if nuevos_documentos:
-        documentos = cargar_documentos(workspace)
-        if documentos:
-            chunks = aplicar_chunking(documentos)
-            crear_vectorstore(workspace, chunks)
-            st.success("🔁 Documentos vectorizados nuevamente.")
-        for archivo in nuevos_documentos:
-            if archivo.endswith((".xls", ".xlsx", ".xlsm")):
-                resultado = cargar_excel_a_postgres(archivo, workspace, os.getenv("DB_URL"))
-                st.info(resultado)
-
-    # Mostrar historial en orden cronológico ascendente
-    for pregunta, respuesta in st.session_state.chat_history:
-        st.markdown(f"**🧑 Usuario:** {pregunta}")
-        # st.markdown(f"**🤖 GPT-4o:** {respuesta}")
-        st.markdown(f"**🤖 TaxMiner:** {respuesta}")
-        st.markdown("---")
-
-    prompt = st.chat_input("Escribí tu pregunta...", key="chat_input_manual")
-
-    if not prompt and "chat_input_voz" in st.session_state:
+    # --- GESTIÓN DE LA ENTRADA DEL USUARIO ---
+    prompt = st.chat_input("Escribí tu pregunta...")
+    if "chat_input_voz" in st.session_state:
         prompt = st.session_state.pop("chat_input_voz")
 
+    # --- LLAMADA AL AGENTE LANGGRAPH (LÓGICA PRINCIPAL REFACTORIZADA) ---
     if prompt:
-        try:
-            
-            agente_sql = crear_agente_sql(workspace)
-            with st.spinner("Consultando base de datos..."):
-                respuesta = agente_sql.run(prompt)
-        except Exception as e:
-            # st.warning(f"⚠️ No se pudo usar SQL ({e}). Usando vectorstore...")
-            st.warning(f"⚠️ Utilizando otro método de búsqueda...")
+        st.session_state.messages.append(HumanMessage(content=prompt))
+        with st.chat_message("🧑 Usuario"):
+            st.markdown(prompt)
 
-            archivos_excel = [f for f in archivos if f.endswith((".xls", ".xlsx", ".xlsm"))]
-            if archivos_excel:
-                path_excel = os.path.join(folder, archivos_excel[0])
-                contexto, _ = cargar_excel(path_excel)
-                with st.spinner("Analizando Excel con GPT-4o..."):
-                    response = client.chat.completions.create(
-                        model=os.getenv("MODEL_NAME", "gpt-4o"),
-                        messages=[
-                            {"role": "system", "content": "Actuá como un contador experto."},
-                            {"role": "user", "content": f"{contexto}\n\n{prompt}"}
-                        ]
-                    )
-                    respuesta = response.choices[0].message.content
-            else:
-                vectordb = cargar_vectorstore(workspace)
-                if vectordb is None:
-                    st.error("❌ No hay base vectorial disponible.")
-                    return
-                docs = vectordb.similarity_search(prompt, k=5)
-                contexto = "\n\n".join([doc.page_content for doc in docs])
-                with st.spinner("Buscando en la base de conocimiento..."):
-                    response = client.chat.completions.create(
-                        model=os.getenv("MODEL_NAME", "gpt-4o"),
-                        messages=[
-                            {"role": "system", "content": "Actuá como un contador experto."},
-                            {"role": "user", "content": f"{contexto}\n\n{prompt}"}
-                        ]
-                    )
-                    respuesta = response.choices[0].message.content
+        with st.chat_message("🤖 TaxMiner"):
+            with st.spinner("Pensando..."):
+                # Preparamos el estado para el grafo
+                graph_state = {
+                    "messages": list(st.session_state.messages),
+                    "workspace": workspace,
+                }
+                
+                final_response = None
+                # Usamos stream para poder ver los pasos intermedios si quisiéramos
+                # Por ahora, solo nos interesa la respuesta final
+                for event in app.stream(graph_state, {"recursion_limit": 15}):
+                    if "agent" in event:
+                        # La respuesta final es el último mensaje del nodo 'agent'
+                        if event["agent"]["messages"][-1].content:
+                             final_response = event["agent"]["messages"][-1]
 
-        st.session_state.chat_history.append((prompt, respuesta))
-        save_history(workspace, st.session_state.chat_history)
+                if final_response:
+                    st.markdown(final_response.content)
+                    st.session_state.messages.append(final_response)
+                    
+                    # Guardamos el historial en el formato antiguo para retrocompatibilidad
+                    historial_para_guardar = guardar_mensajes_a_historial(st.session_state.messages)
+                    save_history(workspace, historial_para_guardar)
+                else:
+                    st.error("El agente no pudo generar una respuesta.")
 
-        # Ejecutar comandos MCP si aplica
-        if "generá un word" in prompt.lower():
-            historial_completo = "\n\n".join(f"🧑 Usuario: {q}\n🤖 GPT: {a}" for q, a in st.session_state.chat_history)
-            archivo = ejecutar_mcp("generar_word", nombre_archivo="conversacion_completa", contenido=historial_completo, workspace=workspace)
-            st.session_state["archivo_word_generado"] = archivo
+        # --- GESTIÓN DE DESCARGAS (ADAPTADO) ---
+        # Ahora, en lugar de revisar `if "generá un excel" in prompt...`,
+        # revisamos si la respuesta del agente contiene una ruta de archivo.
+        # Esto es mucho más robusto.
+        if final_response and "La ruta es:" in final_response.content:
+            st.rerun() # Hacemos un rerun para que el botón de descarga aparezca abajo
 
-        elif "generá un excel" in prompt.lower() and "[" in respuesta:
-            try:
-                tabla = eval(respuesta.strip())
-                archivo = ejecutar_mcp("generar_excel", nombre_archivo="reporte_tabla", tabla=tabla, workspace=workspace)
-                st.session_state["archivo_excel_generado"] = archivo
-            except Exception as e:
-                st.error(f"Error al generar Excel: {e}")
-        elif "resaltá" in prompt.lower() and "facturas" in prompt.lower():
-            archivo = ejecutar_mcp("resaltar_facturas", workspace=workspace, prompt=prompt)
-            st.success("📊 Excel generado con resaltado.")
-            with open(archivo, "rb") as f:
-                st.download_button("⬇️ Descargar Excel", f, file_name=os.path.basename(archivo))
-
-        st.rerun()
-
-    # Mostrar botones de descarga si existen
-    if "archivo_word_generado" in st.session_state:
-        with open(st.session_state["archivo_word_generado"], "rb") as f:
-            st.download_button("⬇️ Descargar Word", f, file_name=os.path.basename(st.session_state["archivo_word_generado"]))
-    if "archivo_excel_generado" in st.session_state:
-        with open(st.session_state["archivo_excel_generado"], "rb") as f:
-            st.download_button("⬇️ Descargar Excel", f, file_name=os.path.basename(st.session_state["archivo_excel_generado"]))
-
-# Elemento marcador invisible al final
-st.markdown('<div id="scroll-anchor"></div>', unsafe_allow_html=True)
-
-# Script para hacer scroll hacia el marcador
-st.markdown("""
-    <script>
-        const anchor = document.getElementById("scroll-anchor");
-        if(anchor){
-            anchor.scrollIntoView({ behavior: "smooth", block: "end" });
-        }
-    </script>
-""", unsafe_allow_html=True)
+    # --- MOSTRAR BOTONES DE DESCARGA ---
+    # Esta lógica se activa después del rerun, cuando la ruta ya está en el último mensaje
+    if st.session_state.messages:
+        last_message = st.session_state.messages[-1]
+        if isinstance(last_message, AIMessage) and "La ruta es:" in last_message.content:
+            # Extraemos la ruta del archivo del texto del mensaje
+            match = re.search(r"La ruta es: (.*)", last_message.content)
+            if match:
+                file_path = match.group(1).strip()
+                if os.path.exists(file_path):
+                    file_name = os.path.basename(file_path)
+                    file_extension = file_name.split('.')[-1].upper()
+                    with open(file_path, "rb") as f:
+                        st.download_button(
+                            f"⬇️ Descargar {file_extension}",
+                            f,
+                            file_name=file_name
+                        )
+# main_chat.py - fin

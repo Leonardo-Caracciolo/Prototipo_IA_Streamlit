@@ -1,0 +1,42 @@
+[
+  [
+    "¿cuantas facturas hay en el sistema?",
+    "Hay un total de 9 facturas en el sistema."
+  ],
+  [
+    "¿cuantas facturas hay en el sistema?",
+    "Hay un total de 9 facturas en el sistema."
+  ],
+  [
+    "¿cuantas facturas hay en el sistema?",
+    "Hay un total de 12 facturas en el sistema."
+  ],
+  [
+    "¿cuantas facturas hay en el sistema?",
+    "Hay un total de 18 facturas en el sistema."
+  ],
+  [
+    "¿me podrias listar todos los campos unicos de la columna Emisor_mail?",
+    "Los valores únicos en la columna \"Emisor_mail\" son:\n\n1. tolabaseba17atgmail.com\n2. ovenpereyraatgmail.com\n3. camquirog01atgmail.com\n4. davallejos"
+  ],
+  [
+    "¿cuantas facturas hay en el sistema?",
+    "Hay un total de 46 facturas en el sistema."
+  ],
+  [
+    "Necesito que me listes todas las facturas",
+    "Aquí tienes una lista de algunas facturas:\n\n1. **Factura 1:**\n   - Fecha de emisión: 02/06/2023\n   - CUIT del emisor: 30705463367\n   - CUIT del receptor: 30-71239962-3\n   - Detalle del servicio: Viajes realizados por cuenta y orden de terceros\n   - Total: 44,303.02\n   - IVA: 2,325.91\n   - CAE: 73227198263700\n   - Autorización CAE: Fecha no coincide\n\n2. **Factura 2:**\n   - Fecha de emisión: 21/06/2023\n   - CUIT del emisor: 30661928510\n   - CUIT del receptor: 30-71239962-3\n   - Detalle del servicio: Alquiler Dispenser Agua JUNIO 2023 OC 4201831908\n   - Total: 15,300.00\n   - IVA: 3,213.00\n   - CAE: 73250017538412\n   - Autorización CAE: Fecha no coincide\n\n3. **Factura 3:**\n   - Fecha de emisión: 24/04/2023\n   - CUIT del emisor: 3371751305933717513059\n   - CUIT del receptor: 30-71239962-3\n   - Detalle del servicio: VILLA DEL SUR BOTELLON 20LTS PALLET\n   - Total: 9,365.28\n   - CAE: 33159100800374\n   - Autorización CAE: CAE no encontrado\n\n4. **Factura 4:**\n   - Fecha de emisión: 20/04/2023\n   - CUIT del emisor: 30698011145\n   - CUIT del receptor: 30712399623\n   - Detalle del servicio: Incremento transit.CCT40/89\n   - Total: 352,441.00\n   - IVA: 74,012.61\n   - CAE: 33155357019234\n   - Autorización CAE: Autorizado\n\n5. **Factura 5:**\n   - Fecha de emisión: 06/06/2023\n   - CUIT del emisor: 30705534752\n   - CUIT del receptor: 30-71239962-3\n   - Detalle del servicio: TIT Titulares\n   - Total: 485,950.64\n   - IVA: 102,049.63\n   - CAE: Nº73232660346131\n   - Autorización CAE: CAE no encontrado\n\nEsta es solo una parte de la lista completa de facturas. Si necesitas más detalles o información específica, házmelo saber."
+  ],
+  [
+    "Necesito que me listes todas las facturas duplicadas",
+    "Aquí tienes una lista de algunas facturas duplicadas:\n\n1. **Factura 1:**\n   - Fecha de emisión: 06/06/2023\n   - CUIT del emisor: 30705534752\n   - Detalle: TIT Titulares\n   - Importe: 485,950.64\n   - CAE: Nº73232660346131\n\n2. **Factura 2:**\n   - Fecha de emisión: 28/06/2025\n   - CUIT del emisor: 33690789499\n   - Detalle: Servicios\n   - Importe: 1,734,000.00\n   - CAE: 20300000000000\n\n3. **Factura 3:**\n   - Fecha de emisión: 28/05/2025\n   - CUIT del emisor: 30741612341\n   - Detalle: No especificado\n   - Importe: 19,761.95\n\n4. **Factura 4:**\n   - Fecha de emisión: 30/06/2025\n   - CUIT del emisor: 27422260930\n   - Detalle: Servicios de diseño gráfico y manejo de redes\n   - Importe: 850,000.00\n   - CAE: 62200000000000\n\n5. **Factura 5:**\n   - Fecha de emisión: 25/03/2025\n   - CUIT del emisor: 30526124916\n   - Detalle: Servicios\n   - Importe: 4,500.00\n\nEstas son algunas de las facturas duplicadas registradas. Si necesitas más detalles o información adicional, házmelo saber."
+  ],
+  [
+    "¿hay facturas duplicadas?",
+    "Sí, hay 9 facturas duplicadas."
+  ],
+  [
+    " ¿hay facturas duplicadas? podes listarme los Nro. de Factura?",
+    "Sí, hay facturas duplicadas. Aquí tienes los números de factura:\n\n- 00005 - 00005158\n- 7027-83357158\n- 0009-56411027\n- 1260-10693761\n- 0766-85345472\n\nAlgunas facturas no tienen un número de factura registrado."
+  ]
+]

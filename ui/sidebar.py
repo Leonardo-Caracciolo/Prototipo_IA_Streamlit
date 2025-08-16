@@ -1,3 +1,5 @@
+#sidebar.py
+
 import streamlit as st
 from core.workspace_manager import get_all_workspaces, create_workspace
 
@@ -17,3 +19,4 @@ def sidebar():
     st.sidebar.markdown("## Workspaces")
     for ws in get_all_workspaces():
         st.sidebar.markdown(f"- [{ws}](?workspace={ws})")
+#sidebar.py - fin
