@@ -1,3 +1,5 @@
+# vectorizer.py - Inicio
+
 import os
 from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -7,35 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 EMBEDDING_MODEL = OpenAIEmbeddings()
-
-# def cargar_documentos(workspace):
-#     carpeta = f"storage/workspaces/{workspace}/documents"
-#     documentos = []
-
-#     if not os.path.exists(carpeta):
-#         print(f"❌ Carpeta no encontrada: {carpeta}")
-#         return []
-
-#     for archivo in os.listdir(carpeta):
-#         path = os.path.join(carpeta, archivo)
-
-#         if archivo.endswith(".pdf"):
-#             try:
-#                 loader = PyPDFLoader(path)
-#                 documentos.extend(loader.load())
-#             except Exception as e:
-#                 print(f"❌ Error cargando PDF {archivo}: {e}")
-#                 continue
-
-#         elif archivo.endswith(".docx"):
-#             try:
-#                 loader = UnstructuredWordDocumentLoader(path)
-#                 documentos.extend(loader.load())
-#             except Exception as e:
-#                 print(f"❌ Error cargando Word {archivo}: {e}")
-#                 continue
-
-#     return documentos
 
 
 from langchain.docstore.document import Document
@@ -96,3 +69,4 @@ def cargar_vectorstore(workspace):
     if not os.path.exists(path):
         return None
     return FAISS.load_local(path, EMBEDDING_MODEL, allow_dangerous_deserialization=True)
+# vectorizer.py - Fin

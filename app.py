@@ -15,8 +15,8 @@ query_params = st.query_params
 workspace = query_params.get("workspace", [None])
 
 if workspace:
-    st.markdown(f"### Workspace seleccionado: `{workspace}``")
-    uploader(workspace)
+    # st.markdown(f"### 💬 Chat — Workspace: {workspace}")
+    # uploader(workspace)
     chat(workspace)
 else:
     st.info("Seleccioná o creá un workspace desde la barra lateral.")

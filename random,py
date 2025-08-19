@@ -1,0 +1,8 @@
+from chromadb.config import Settings
+import chromadb
+client = chromadb.PersistentClient(
+    path=r"C:\Users\seba\Desktop\IA_DELOITTE\Prototipo_IA_Streamlit\leyes_vectorizer",
+    settings=Settings(anonymized_telemetry=False)
+)
+col = client.get_or_create_collection("central_leyes")  # ojo: que coincida
+print("total_docs =", col.count())

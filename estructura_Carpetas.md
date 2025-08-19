@@ -1,131 +1,142 @@
-# Estructura de carpetas del proyecto
+# Estructura de carpetas y archivos del proyecto
 
-Ruta base:
-c:\Users\seba\Desktop\IA_DELOITTE\Prototipo_IA_Streamlit
+Ruta base:  
+`c:\Users\seba\Desktop\IA_DELOITTE\Prototipo_IA_Streamlit`
 
-Árbol de directorios:
-- Prototipo_IA_Streamlit/
-  - core/
-    - file_handler.py
-    - history.py
-    - mcp_runner.py
-    - rag_pipeline.py
-    - sql_agent.py
-    - sql_loader.py
-    - vectorizer.py
-    - watchdog_manager.py
-    - workspace_manager.py
-    - __pycache__/
-      - file_handler.cpython-312.pyc
-      - file_handler.cpython-313.pyc
-      - history.cpython-312.pyc
-      - history.cpython-313.pyc
-      - mcp_runner.cpython-312.pyc
-      - mcp_runner.cpython-313.pyc
-      - rag_pipeline.cpython-313.pyc
-      - rag_pipeline.cpython-313.pyc.2602150283664
-      - sql_agent.cpython-312.pyc
-      - sql_loader.cpython-312.pyc
-      - vectorizer.cpython-312.pyc
-      - vectorizer.cpython-313.pyc
-      - watchdog_manager.cpython-312.pyc
-      - workspace_manager.cpython-312.pyc
-      - workspace_manager.cpython-313.pyc
-  - utils/
-    - __init__.py
-    - chunking.py
-    - embeddings.py
-    - excel_analyzer.py
-    - helpers.py
-    - tabla_parser.py 
-    - voz_a_prompt.py
-    - __pycache__/
-      - __init__.cpython-312.pyc
-      - __init__.cpython-313.pyc
-      - excel_analyzer.cpython-312.pyc
-      - excel_analyzer.cpython-313.pyc
-      - tabla_parser.cpython-313.pyc
-      - voz_a_prompt.cpython-312.pyc
-      - voz_a_prompt.cpython-313.pyc
-  - ui/
-    - file_uploader.py
-    - main_chat.py
-    - sidebar.py
-    - __pycache__/
-      - file_uploader.cpython-312.pyc
-      - file_uploader.cpython-313.pyc
-      - main_chat.cpython-312.pyc
-      - main_chat.cpython-313.pyc
-      - main_chat.cpython-313.pyc.2263713635408
-      - main_chat.cpython-313.pyc.2602184574256
-      - sidebar.cpython-312.pyc
-      - sidebar.cpython-313.pyc
-  - storage/
-    - workspaces/
-      - base_conocimiento/
-        - history.json
-        - documents/
-          - RG DE SICORE.pdf
-          - RG830 .pdf
-        - vectorstore/
-          - index.faiss
-          - index.pkl
-      - facturas/
-        - Anterior_history.json
-        - history.json
-        - documents/
-          - Facturas_totales.xlsx
-        - vectorstore/
-          - index.faiss
-          - index.pkl
-  - mcps/
-    - __init__.py
-    - crear_tabla_excel.py
-    - generar_excel.py
-    - generar_word.py
-    - resaltar_facturas.py
-    - resumen_conversacion.py
-    - resumen_factura.py
-    - workspace_manager.py
-    - __pycache__/
-      - generar_excel.cpython-313.pyc
-      - generar_word.cpython-313.pyc
-  - estructura_Carpetas.md
+---
 
-Descripción por carpeta:
-- core: Núcleo de la app (backend).
-  - sql_agent.py: Agente SQL (LangChain + OpenAI) con validaciones y guard-rails para Postgres.
-  - rag_pipeline.py, vectorizer.py: Pipeline RAG (vectorización, consulta).
-  - sql_loader.py: Carga/ingesta de datos hacia SQL.
-  - file_handler.py: Manejo de archivos y rutas de trabajo.
-  - history.py: Gestión de historial de conversaciones por workspace.
-  - workspace_manager.py: Orquestación de workspaces y recursos asociados.
-  - watchdog_manager.py: Observa cambios en archivos/carpeta.
-  - mcp_runner.py: Integración/ejecución de procesos auxiliares (MCPs).
-- utils: Utilidades y helpers reutilizables.
-  - chunking.py: Segmentación de texto/documentos.
-  - embeddings.py: Funciones de embeddings.
-  - excel_analyzer.py: Utilidades para analizar/leer Excel.
-  - tabla_parser.py: Parseo de tablas desde texto/HTML.
-  - voz_a_prompt.py: Transformaciones de entrada de voz a prompts.
-  - helpers.py: Funciones auxiliares generales.
-- ui: Componentes de interfaz (Streamlit).
-  - main_chat.py: Vista principal de chat.
-  - sidebar.py: Barra lateral (configuración, selección de workspace, etc.).
-  - file_uploader.py: Carga de documentos.
-- storage: Almacenamiento persistente por workspace.
-  - workspaces/<workspace>/
-    - documents/: Archivos subidos o base de conocimiento.
-    - vectorstore/: Índices FAISS (index.faiss, index.pkl).
-    - history.json: Historial de chat del workspace.
-- mcps: Módulos para generación de salidas/artefactos.
-  - generar_excel.py / crear_tabla_excel.py: Exportaciones y tablas a Excel.
-  - generar_word.py: Generación de reportes Word.
-  - resumen_factura.py / resaltar_facturas.py: Resúmenes y marcado de facturas.
-  - resumen_conversacion.py: Síntesis de conversaciones.
-  - workspace_manager.py: Utilidades específicas para workspaces.
+## core/
+**Núcleo de la lógica de negocio y agentes.**
 
-Notas:
-- __pycache__: Archivos compilados generados automáticamente por Python.
-- Variables de entorno relevantes: DB_URL, OPENAI_API_KEY, MODEL_NAME (opcional, por defecto "gpt-4o").
-- Dependencias clave: python-dotenv, langchain, langchain_openai,
+- **file_handler.py**  
+  Manejo de archivos, rutas y operaciones de lectura/escritura.
+- **graph_agent.py**  
+  (Probablemente) Agente para consultas o análisis de grafos.
+- **history.py**  
+  Gestión del historial de conversaciones por workspace.
+- **mcp_runner.py**  
+  Ejecución de procesos MCP auxiliares.
+- **rag_pipeline.py**  
+  Pipeline RAG: vectorización y recuperación de información.
+- **sql_agent.py**  
+  Agente SQL (LangChain + OpenAI) con validaciones y guard-rails para consultas Postgres.
+- **sql_loader.py**  
+  Carga/ingesta de datos hacia SQL.
+- **tools.py**  
+  Herramientas utilitarias para agentes o pipelines.
+- **vectorizer.py**  
+  Vectorización de documentos/textos para búsquedas semánticas.
+- **watchdog_manager.py**  
+  Observa cambios en archivos/carpeta para recarga o actualización.
+- **workspace_manager.py**  
+  Orquestación de workspaces y recursos asociados.
+- **__pycache__/**  
+  Archivos compilados de Python.
+
+---
+
+## utils/
+**Utilidades y helpers reutilizables.**
+
+- **__init__.py**  
+  Inicialización del módulo utils.
+- **chunking.py**  
+  Funciones para segmentar textos/documentos en partes manejables.
+- **embeddings.py**  
+  Funciones para generar embeddings vectoriales.
+- **excel_analyzer.py**  
+  Utilidades para analizar y leer archivos Excel.
+- **helpers.py**  
+  Funciones auxiliares generales.
+- **tabla_parser.py**  
+  Parseo de tablas desde texto o HTML.
+- **voz_a_prompt.py**  
+  Conversión de entrada de voz a prompts de texto.
+- **__pycache__/**  
+  Archivos compilados de Python.
+
+---
+
+## ui/
+**Componentes de interfaz de usuario (Streamlit).**
+
+- **file_uploader.py**  
+  Componente para carga de documentos.
+- **main_chat.py**  
+  Vista principal de chat con el agente.
+- **sidebar.py**  
+  Barra lateral para configuración y selección de workspace.
+- **__pycache__/**  
+  Archivos compilados de Python.
+
+---
+
+## storage/
+**Almacenamiento persistente por workspace.**
+
+- **workspaces/**  
+  Carpeta raíz para workspaces.
+  - **base_conocimiento/**  
+    - **history.json**: Historial de chat.
+    - **meta.json**: Metadatos del workspace.
+    - **documents/**: Archivos subidos (ej: PDFs).
+    - **vectorstore/**: Índices FAISS (`index.faiss`, `index.pkl`).
+  - **facturas/**  
+    - **Anterior_history.json**: Historial anterior.
+    - **history.json**: Historial actual.
+    - **meta.json**: Metadatos.
+    - **documents/**: Archivos Excel de facturas.
+    - **vectorstore/**: Índices FAISS.
+  - **facturas-2024/**  
+    - **history.json**, **meta.json**
+    - **documents/**, **knowledge/**, **threads/**: Carpetas para documentos, conocimiento y hilos de conversación.
+
+---
+
+## mcps/
+**Módulos para generación de salidas y artefactos.**
+
+- **__init__.py**  
+  Inicialización del módulo.
+- **crear_tabla_excel.py**  
+  Creación de tablas y exportación a Excel.
+- **generar_excel.py**  
+  Generación de reportes o archivos Excel.
+- **generar_word.py**  
+  Generación de reportes Word.
+- **resaltar_facturas.py**  
+  Marcado/resaltado de facturas relevantes.
+- **resumen_conversacion.py**  
+  Síntesis de conversaciones.
+- **resumen_factura.py**  
+  Resúmenes automáticos de facturas.
+- **workspace_manager.py**  
+  Utilidades específicas para workspaces.
+- **__pycache__/**  
+  Archivos compilados de Python.
+
+---
+
+## Otros archivos relevantes
+
+- **estructura_Carpetas.md**  
+  Este archivo: resumen y documentación de la estructura del proyecto.
+- **app.py**  
+  Punto de entrada principal de la app Streamlit. Orquesta la UI y la selección de workspace.
+
+---
+
+## Notas generales
+
+- **__pycache__/**:  
+  Carpetas generadas automáticamente por Python para almacenar bytecode compilado.
+- **Variables de entorno**:  
+  - `DB_URL`: Conexión a base de datos.
+  - `OPENAI_API_KEY`: API Key de OpenAI.
+  - `MODEL_NAME`: Modelo de LLM a usar (por defecto "gpt-4o").
+- **Dependencias clave**:  
+  - `python-dotenv`, `langchain`, `langchain_openai`, `langchain_community`, `streamlit`.
+
+---
+
+**Esta estructura permite separar claramente la lógica de negocio, utilidades, interfaz, almacenamiento y generación de reportes, facilitando el mantenimiento y evolución del sistema.**
