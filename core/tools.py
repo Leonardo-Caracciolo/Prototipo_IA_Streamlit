@@ -252,23 +252,31 @@ def buscar_por_numero_factura(punto_venta: int, numero_factura: int, cuit_emisor
         return _execute(q, (punto_venta, numero_factura))
 
 @tool
-def contar_duplicados_por_clave_natural(limit: int = 50) -> str:
+def contar_duplicados_por_clave_natural(limit: int = 100) -> str:
     """
-    Lista combinaciones (emisor_id, cod, letra, PV, número) con más de 1 factura (duplicados).
-    Devuelve cantidad y los ids relacionados.
+    Lista todas las filas de facturas que tienen una clave natural duplicada.
+    La clave es (emisor_id, cod, letra, PV, número).
+    Muestra todos los campos de cada factura duplicada.
     """
     q = f"""
-        SELECT
-          f.emisor_id, f.codigo_comprobante, f.letra_comprobante, f.punto_venta, f.numero_factura,
-          COUNT(*) AS repeticiones,
-          array_agg(f.id ORDER BY f.id DESC) AS factura_ids
+        WITH Duplicados AS (
+            SELECT
+                emisor_id, codigo_comprobante, letra_comprobante, punto_venta, numero_factura,
+                COUNT(*) AS repeticiones
+            FROM {T_FACTURA}
+            GROUP BY 1,2,3,4,5
+            HAVING COUNT(*) > 1
+        )
+        SELECT f.*,
+            d.repeticiones
         FROM {T_FACTURA} f
-        GROUP BY 1,2,3,4,5
-        HAVING COUNT(*) > 1
-        ORDER BY repeticiones DESC
+        JOIN Duplicados d ON
+            f.punto_venta = d.punto_venta AND
+            f.numero_factura = d.numero_factura
+        ORDER BY f.emisor_id, f.numero_factura, f.id
         LIMIT %s;
     """
-    return _execute(q, (_limit(limit, default=50, maxn=500),))
+    return _execute(q, (_limit(limit, default=100, maxn=1000),))
 
 @tool
 def buscar_por_cae(cae_numero: str, workspace: str = "") -> str:
@@ -541,7 +549,7 @@ def listar_apocrifas(limit: int = 20) -> str:
     """
     return _execute(q, {"lim": _limit(limit)})
 
-
+# Inicio Controles CAE ---------------------------------------------------------------------------------
 @tool
 def listar_cae(motivo: str = "NO_EN_PADRON", limit: int = 20) -> str:
     """
@@ -561,6 +569,115 @@ def listar_cae(motivo: str = "NO_EN_PADRON", limit: int = 20) -> str:
     """
     return _execute(q, {"motivo": motivo, "lim": _limit(limit)})
 
+CAE_VIEW = "afip.vw_facturas_cae"
+
+@tool
+def listar_no_en_padron_cae(
+    limit: int = 100,
+    desde: str = "",
+    hasta: str = "",
+    moneda: str = "",
+    incluir_totales: bool = True
+) -> str:
+    """
+    Lista facturas cuyo CAE NO figura en el padrón (validacion_cae = 'NO_EN_PADRON').
+    Parámetros opcionales:
+      - desde / hasta: YYYY-MM-DD (filtra por fecha_emision)
+      - moneda: filtra por moneda exacta (ej. 'ARS', 'USD')
+      - incluir_totales: agrega columnas de total por moneda y total general
+      - limit: cantidad de filas
+    """
+    d = (desde or "").strip() or None
+    h = (hasta or "").strip() or None
+    m = (moneda or "").strip() or None
+
+    tot_cols = ", sum(importe_total) OVER (PARTITION BY moneda) AS total_por_moneda, sum(importe_total) OVER () AS total_general" if incluir_totales else ""
+
+    q = f"""
+      SELECT
+        fecha_emision,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        moneda,
+        importe_total,
+        cae_numero,
+        cae_fecha_vto,
+        estado_cae,
+        vencimiento_cae
+        {tot_cols}
+      FROM {CAE_VIEW}
+      WHERE validacion_cae = 'NO_EN_PADRON'
+        AND (%(desde)s::date IS NULL OR fecha_emision >= %(desde)s::date)
+        AND (%(hasta)s::date IS NULL OR fecha_emision <= %(hasta)s::date)
+        AND (%(moneda)s IS NULL OR moneda = %(moneda)s)
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %(lim)s::int;
+    """
+    return _execute(q, {"desde": d, "hasta": h, "moneda": m, "lim": _limit(limit)})
+
+@tool
+def listar_autorizacion_cae(
+    tipo: str = "NO_AUTORIZADAS",
+    limit: int = 100,
+    desde: str = "",
+    hasta: str = "",
+    moneda: str = "",
+    incluir_totales: bool = True
+) -> str:
+    """
+    Lista facturas AUTORIZADAS o NO AUTORIZADAS según 'validacion_cae' contra el padrón.
+    Definición por defecto:
+      - AUTORIZADAS: validacion_cae = 'OK'
+      - NO_AUTORIZADAS: validacion_cae IN ('FECHA_NO_COINCIDE','NO_EN_PADRON','SIN_CAE')
+
+    Parámetros:
+      - tipo: 'AUTORIZADAS' | 'NO_AUTORIZADAS'
+      - desde / hasta: YYYY-MM-DD (filtra por fecha_emision)
+      - moneda: filtra por moneda exacta
+      - incluir_totales: agrega total_por_moneda y total_general
+      - limit: cantidad de filas
+    """
+    t = (tipo or "").upper().strip()
+    if t not in {"AUTORIZADAS", "NO_AUTORIZADAS"}:
+        t = "NO_AUTORIZADAS"
+
+    d = (desde or "").strip() or None
+    h = (hasta or "").strip() or None
+    m = (moneda or "").strip() or None
+
+    if t == "AUTORIZADAS":
+        cond = "validacion_cae = 'OK'"
+    else:
+        cond = "validacion_cae IN ('FECHA_NO_COINCIDE','NO_EN_PADRON','SIN_CAE')"
+
+    tot_cols = ", sum(importe_total) OVER (PARTITION BY moneda) AS total_por_moneda, sum(importe_total) OVER () AS total_general" if incluir_totales else ""
+
+    q = f"""
+      SELECT
+        fecha_emision,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        moneda,
+        importe_total,
+        cae_numero,
+        cae_fecha_vto,
+        estado_cae,
+        vencimiento_cae,
+        validacion_cae
+        {tot_cols}
+      FROM {CAE_VIEW}
+      WHERE {cond}
+        AND (%(desde)s::date IS NULL OR fecha_emision >= %(desde)s::date)
+        AND (%(hasta)s::date IS NULL OR fecha_emision <= %(hasta)s::date)
+        AND (%(moneda)s IS NULL OR moneda = %(moneda)s)
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %(lim)s::int;
+    """
+    return _execute(q, {"desde": d, "hasta": h, "moneda": m, "lim": _limit(limit)})
+
+# Inicio Controles CAE ---------------------------------------------------------------------------------
 
 @tool
 def listar_no_en_mis_comprobantes(limit: int = 20) -> str:
@@ -568,47 +685,132 @@ def listar_no_en_mis_comprobantes(limit: int = 20) -> str:
     Facturas que NO figuran en mis_comprobantes (por CUIT/PV/Número).
     """
     q = """
-      SELECT fecha_emision, razon_social_emisor AS emisor, cuit_emisor,
-             pv_num AS comprobante, importe_total, moneda, emisor_mail
+      SELECT
+        fecha_emision AS fecha,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        importe_total,
+        moneda,
+        emisor_mail
       FROM afip.vw_facturas_mis_comprobantes
       WHERE COALESCE(existe_en_mis_comprobantes, FALSE) = FALSE
-      ORDER BY fecha_emision DESC NULLS LAST
-      LIMIT %(lim)s::int;
+      ORDER BY fecha DESC NULLS LAST
+      LIMIT %s;
     """
-    return _execute(q, {"lim": _limit(limit)})
-
+    return _execute(q, (_limit(limit),))
 
 @tool
-def resumen_validaciones() -> str:
+def listar_en_mis_comprobantes(limit: int = 20) -> str:
     """
-    Resumen global (usa la consolidada).
+    Facturas que SÍ figuran en mis_comprobantes (match por CUIT/PV/Número).
+    Muestra también la fila que las hizo coincidir en “Mis comprobantes”.
     """
     q = """
-    WITH c AS (
-      SELECT validacion_cae, COUNT(*)::bigint n
-      FROM afip.vw_facturas_cae
-      GROUP BY validacion_cae
-    ),
-    m AS (
       SELECT
-        SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 1 ELSE 0 END)::bigint AS en_mis,
-        SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 0 ELSE 1 END)::bigint AS fuera_mis
+        fecha_emision AS fecha,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        importe_total,
+        moneda,
+        emisor_mail,
+        fecha_mis,
+        numero_desde,
+        numero_hasta
       FROM afip.vw_facturas_mis_comprobantes
-    ),
-    a AS (
-      SELECT COUNT(*)::bigint AS apocrifas
-      FROM afip.vw_facturas_apocrifas
-    )
-    SELECT
-      a.apocrifas,
-      COALESCE(MAX(CASE WHEN c.validacion_cae='OK' THEN c.n END),0)                AS cae_ok,
-      COALESCE(MAX(CASE WHEN c.validacion_cae='NO_EN_PADRON' THEN c.n END),0)       AS cae_no_en_padron,
-      COALESCE(MAX(CASE WHEN c.validacion_cae='FECHA_NO_COINCIDE' THEN c.n END),0)  AS cae_fecha_no_coincide,
-      COALESCE(MAX(CASE WHEN c.validacion_cae='SIN_CAE' THEN c.n END),0)            AS cae_sin_cae,
-      m.en_mis,
-      m.fuera_mis;
+      WHERE COALESCE(existe_en_mis_comprobantes, FALSE) = TRUE
+      ORDER BY fecha_mis DESC NULLS LAST, fecha DESC NULLS LAST
+      LIMIT %s;
     """
-    return _execute(q, {})
+    return _execute(q, (_limit(limit),))
+
+@tool
+def listar_no_en_mis_comprobantes_por_cuit(cuit: str, limit: int = 20) -> str:
+    """
+    Facturas de un CUIT que NO figuran en 'mis_comprobantes'.
+    El CUIT puede venir con guiones o espacios.
+    """
+    # normalizo CUIT a solo dígitos
+    digits = "".join(ch for ch in (cuit or "") if ch.isdigit())
+
+    q = """
+      SELECT
+        fecha_emision,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        importe_total,
+        moneda,
+        emisor_mail
+      FROM afip.vw_facturas_mis_comprobantes
+      WHERE cuit_emisor = %s
+        AND COALESCE(existe_en_mis_comprobantes, FALSE) = FALSE
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %s;
+    """
+    return _execute(q, (digits, _limit(limit)))
+
+@tool
+def listar_en_mis_comprobantes_por_cuit(cuit: str, limit: int = 20) -> str:
+    """
+    Facturas de un CUIT que SÍ aparecen en 'mis_comprobantes'.
+    Muestra además la fila de MC que hizo match (fecha y rango).
+    """
+    digits = "".join(ch for ch in (cuit or "") if ch.isdigit())
+
+    q = """
+      SELECT
+        fecha_emision,
+        razon_social_emisor AS emisor,
+        cuit_emisor,
+        pv_num AS comprobante,
+        importe_total,
+        moneda,
+        emisor_mail,
+        fecha_mis,
+        numero_desde,
+        numero_hasta
+      FROM afip.vw_facturas_mis_comprobantes
+      WHERE cuit_emisor = %s
+        AND COALESCE(existe_en_mis_comprobantes, FALSE) = TRUE
+      ORDER BY fecha_mis DESC NULLS LAST, fecha_emision DESC NULLS LAST
+      LIMIT %s;
+    """
+    return _execute(q, (digits, _limit(limit)))
+
+
+# @tool
+# def resumen_validaciones() -> str:
+#     """
+#     Resumen global (usa la consolidada).
+#     """
+#     q = """
+#     WITH c AS (
+#       SELECT validacion_cae, COUNT(*)::bigint n
+#       FROM afip.vw_facturas_cae
+#       GROUP BY validacion_cae
+#     ),
+#     m AS (
+#       SELECT
+#         SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 1 ELSE 0 END)::bigint AS en_mis,
+#         SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 0 ELSE 1 END)::bigint AS fuera_mis
+#       FROM afip.vw_facturas_mis_comprobantes
+#     ),
+#     a AS (
+#       SELECT COUNT(*)::bigint AS apocrifas
+#       FROM afip.vw_facturas_apocrifas
+#     )
+#     SELECT
+#       a.apocrifas,
+#       COALESCE(MAX(CASE WHEN c.validacion_cae='OK' THEN c.n END),0)                AS cae_ok,
+#       COALESCE(MAX(CASE WHEN c.validacion_cae='NO_EN_PADRON' THEN c.n END),0)       AS cae_no_en_padron,
+#       COALESCE(MAX(CASE WHEN c.validacion_cae='FECHA_NO_COINCIDE' THEN c.n END),0)  AS cae_fecha_no_coincide,
+#       COALESCE(MAX(CASE WHEN c.validacion_cae='SIN_CAE' THEN c.n END),0)            AS cae_sin_cae,
+#       m.en_mis,
+#       m.fuera_mis;
+#     """
+#     return _execute(q, {})
 
 # ---------------------- TOOLS (utilitarias) ----------------------
 
@@ -1415,7 +1617,14 @@ lista_de_herramientas = [
     listar_apocrifas,
     listar_cae,
     listar_no_en_mis_comprobantes,
-    resumen_validaciones,
+    listar_en_mis_comprobantes,
+    listar_no_en_mis_comprobantes_por_cuit,
+    listar_en_mis_comprobantes_por_cuit,
+    # resumen_validaciones,
+    # Controles CAE
+    listar_no_en_padron_cae,
+    listar_autorizacion_cae,
+    # Controles CAE
     buscar_en_documentos_de_conocimiento,  # RAG por-workspace
     # RAG leyes (nuevas)
     buscar_fragmentos_de_leyes,

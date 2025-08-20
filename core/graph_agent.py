@@ -27,12 +27,20 @@ from core.tools import (
     resumen_iva_por_alicuota,
     items_de_factura,
     info_factura_min,
-    buscar_en_documentos_de_conocimiento,
+    # Controles
     listar_apocrifas,
     listar_cae,
     listar_no_en_mis_comprobantes,
-    resumen_validaciones,
-    # NUEVAS (RAG leyes)
+    listar_en_mis_comprobantes,
+    listar_no_en_mis_comprobantes_por_cuit,
+    listar_en_mis_comprobantes_por_cuit,
+    # resumen_validaciones,
+    # Controles CAE
+    listar_no_en_padron_cae,
+    listar_autorizacion_cae,
+    # Controles CAE
+    buscar_en_documentos_de_conocimiento,  # RAG por-workspace
+    # RAG leyes (nuevas)
     buscar_fragmentos_de_leyes,
     contar_articulos_por_archivo,
     listar_articulos_de_ley,
@@ -75,7 +83,12 @@ def _allowed_tools_for(ws_type: str):
             listar_apocrifas,
             listar_cae,
             listar_no_en_mis_comprobantes,
-            resumen_validaciones,
+            # resumen_validaciones,
+            listar_en_mis_comprobantes,
+            listar_no_en_mis_comprobantes_por_cuit,
+            listar_en_mis_comprobantes_por_cuit,
+            listar_no_en_padron_cae,
+            listar_autorizacion_cae,
         ]
     else:  # Conocimiento de leyes
         return [
