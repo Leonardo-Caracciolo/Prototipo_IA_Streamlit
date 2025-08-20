@@ -66,8 +66,8 @@ def _db_config() -> Dict[str, str]:
     """Lee credenciales de la DB desde .env."""
     return {
         "dbname":   os.getenv("DB_NAME", "conocimiento_ia"),
-        "user":     os.getenv("DB_USER", "postgres"),
-        "password": os.getenv("DB_PASSWORD", ""),
+        "user":     os.getenv("DB_USER", "lecaracciolo"),
+        "password": os.getenv("DB_PASSWORD", "200797"),
         "host":     os.getenv("DB_HOST", "localhost"),
         "port":     os.getenv("DB_PORT", "5432"),
     }
@@ -115,6 +115,7 @@ import psycopg2
 import psycopg2.extras
 from datetime import date
 from langchain.tools import tool
+from urllib.parse import urlparse, parse_qs, unquote
 
 AFIP_VIEW = "afip.facturas_flat"
 T_FACTURA = "afip.factura"
@@ -129,22 +130,42 @@ def _connect():
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL no está definido en el entorno.")
-    return psycopg2.connect(url)
 
-def _execute(query: str, params: tuple = ()):
-    """Ejecuta SQL y devuelve un string JSON con filas [{...}, ...] o {'count':N} según corresponda."""
+    # Si ya es un DSN tipo "host=... dbname=...", úsalo directo
+    if "://" not in url:
+        return psycopg2.connect(url)
+
+    # Parsear URL estilo SQLAlchemy
+    p = urlparse(url)
+    if not p.scheme.startswith("postgres"):
+        raise RuntimeError(f"Esquema no soportado en DATABASE_URL: {p.scheme}")
+
+    params = {
+        "dbname": (p.path or "").lstrip("/") or None,
+        "user": unquote(p.username) if p.username else None,
+        "password": unquote(p.password) if p.password else None,
+        "host": p.hostname or "localhost",
+        "port": p.port or 5432,
+    }
+    # Query string (e.g., ?sslmode=require)
+    qparams = {k: v[0] for k, v in parse_qs(p.query).items()}
+    params.update(qparams)
+
+    return psycopg2.connect(**{k: v for k, v in params.items() if v is not None})
+
+def _execute(query: str, params: tuple | dict = ()):
+    """Ejecuta SQL y devuelve JSON (lista de filas) o {'ok': True} si no hay resultset."""
     with _connect() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(query, params)
             if cur.description is None:
-                # No hay resultset (e.g., UPDATE/INSERT)
                 return json.dumps({"ok": True})
             rows = cur.fetchall()
             return json.dumps(rows, default=str)
 
 def _execute_one(query: str, params: tuple = ()):
     with _connect() as conn:
-        with conn.cursor() as cur:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(query, params)
             val = cur.fetchone()
             return json.dumps(val[0] if val else None, default=str)
@@ -502,6 +523,92 @@ def items_de_factura(factura_id: int) -> str:
         ORDER BY id;
     """
     return _execute(q, (factura_id,))
+
+# ---------------------- TOOLS (Controles APOCRIFAS - CAE - MIS COMPROBANTES) ----------------------
+@tool
+def listar_apocrifas(limit: int = 20) -> str:
+    """
+    Facturas cuyo emisor figura en apócrifas.
+    """
+    q = """
+      SELECT fecha_emision, razon_social_emisor AS emisor, cuit_emisor,
+             pv_num AS comprobante, importe_total, moneda, emisor_mail,
+             fecha_condicion_apocrifo, fecha_publicacion, apocrifas_desc
+      FROM afip.vw_facturas_apocrifas
+      WHERE emisor_en_apocrifas = TRUE
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %(lim)s::int;
+    """
+    return _execute(q, {"lim": _limit(limit)})
+
+
+@tool
+def listar_cae(motivo: str = "NO_EN_PADRON", limit: int = 20) -> str:
+    """
+    Facturas por estado de validación de CAE: OK | NO_EN_PADRON | FECHA_NO_COINCIDE | SIN_CAE.
+    """
+    motivo = (motivo or "").upper().strip()
+    if motivo not in {"OK", "NO_EN_PADRON", "FECHA_NO_COINCIDE", "SIN_CAE"}:
+        motivo = "NO_EN_PADRON"
+    q = """
+      SELECT fecha_emision, razon_social_emisor AS emisor, cuit_emisor,
+             pv_num AS comprobante, cae_numero, cae_fecha_vto,
+             validacion_cae, estado_cae, vencimiento_cae
+      FROM afip.vw_facturas_cae
+      WHERE validacion_cae = %(motivo)s
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %(lim)s::int;
+    """
+    return _execute(q, {"motivo": motivo, "lim": _limit(limit)})
+
+
+@tool
+def listar_no_en_mis_comprobantes(limit: int = 20) -> str:
+    """
+    Facturas que NO figuran en mis_comprobantes (por CUIT/PV/Número).
+    """
+    q = """
+      SELECT fecha_emision, razon_social_emisor AS emisor, cuit_emisor,
+             pv_num AS comprobante, importe_total, moneda, emisor_mail
+      FROM afip.vw_facturas_mis_comprobantes
+      WHERE COALESCE(existe_en_mis_comprobantes, FALSE) = FALSE
+      ORDER BY fecha_emision DESC NULLS LAST
+      LIMIT %(lim)s::int;
+    """
+    return _execute(q, {"lim": _limit(limit)})
+
+
+@tool
+def resumen_validaciones() -> str:
+    """
+    Resumen global (usa la consolidada).
+    """
+    q = """
+    WITH c AS (
+      SELECT validacion_cae, COUNT(*)::bigint n
+      FROM afip.vw_facturas_cae
+      GROUP BY validacion_cae
+    ),
+    m AS (
+      SELECT
+        SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 1 ELSE 0 END)::bigint AS en_mis,
+        SUM(CASE WHEN COALESCE(existe_en_mis_comprobantes,FALSE) THEN 0 ELSE 1 END)::bigint AS fuera_mis
+      FROM afip.vw_facturas_mis_comprobantes
+    ),
+    a AS (
+      SELECT COUNT(*)::bigint AS apocrifas
+      FROM afip.vw_facturas_apocrifas
+    )
+    SELECT
+      a.apocrifas,
+      COALESCE(MAX(CASE WHEN c.validacion_cae='OK' THEN c.n END),0)                AS cae_ok,
+      COALESCE(MAX(CASE WHEN c.validacion_cae='NO_EN_PADRON' THEN c.n END),0)       AS cae_no_en_padron,
+      COALESCE(MAX(CASE WHEN c.validacion_cae='FECHA_NO_COINCIDE' THEN c.n END),0)  AS cae_fecha_no_coincide,
+      COALESCE(MAX(CASE WHEN c.validacion_cae='SIN_CAE' THEN c.n END),0)            AS cae_sin_cae,
+      m.en_mis,
+      m.fuera_mis;
+    """
+    return _execute(q, {})
 
 # ---------------------- TOOLS (utilitarias) ----------------------
 
@@ -1304,6 +1411,11 @@ lista_de_herramientas = [
     resumen_iva_por_alicuota,
     items_de_factura,
     info_factura_min,
+    # Controles
+    listar_apocrifas,
+    listar_cae,
+    listar_no_en_mis_comprobantes,
+    resumen_validaciones,
     buscar_en_documentos_de_conocimiento,  # RAG por-workspace
     # RAG leyes (nuevas)
     buscar_fragmentos_de_leyes,

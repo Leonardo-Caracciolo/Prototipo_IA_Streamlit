@@ -7,7 +7,8 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime
-
+import pandas as pd
+from io import StringIO
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -22,6 +23,176 @@ load_dotenv()
 
 # ─────────── Config general UI ─────────── #
 st.set_page_config(page_title="TaxMiner • Chat", layout="wide")
+
+# ---- Pegar en main_chat.py (helpers de detección/parseo) --------------------
+
+MD_ROW_SEP_PAT = r"^\s*\|.*\|\s*$"  # línea con pipes al inicio y fin
+MD_HEADER_SEP_PAT = r"^\s*\|?\s*:?-{3,}\s*(\|\s*:?-{3,}\s*)+\|?\s*$"
+
+def _is_markdown_table(text: str) -> bool:
+    lines = [l.rstrip() for l in text.strip().splitlines() if l.strip()]
+    if len(lines) < 2: 
+        return False
+    has_row = sum(1 for l in lines if re.match(MD_ROW_SEP_PAT, l)) >= 2
+    has_header_sep = any(re.match(MD_HEADER_SEP_PAT, l) for l in lines[:4])
+    return has_row and has_header_sep
+
+def _is_html_table(text: str) -> bool:
+    t = text.lower()
+    return "<table" in t and "</table>" in t
+
+def _is_csv(text: str) -> bool:
+    # Heurística simple: varias líneas, al menos una con 1+ comas y columnas ~consistentes
+    lines = [l for l in text.strip().splitlines() if l.strip()]
+    if len(lines) < 2: 
+        return False
+    counts = [l.count(",") for l in lines[:20]]
+    return max(counts) >= 1 and len(set(counts)) <= max(3, len(lines)//2)
+
+def _is_json_table(text: str) -> bool:
+    try:
+        obj = json.loads(text)
+    except Exception:
+        return False
+    if isinstance(obj, list) and obj and all(isinstance(r, dict) for r in obj):
+        # Chequeo liviano de “tabla”: llaves relativamente consistentes entre filas
+        keys0 = set(obj[0].keys())
+        same = sum(1 for r in obj[:50] if set(r.keys()) == keys0)
+        return same >= max(1, min(5, len(obj)))
+    return False
+
+def _parse_json_table(text: str) -> pd.DataFrame | None:
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, list):
+            return pd.DataFrame(obj)
+    except Exception:
+        pass
+    return None
+
+def _parse_csv(text: str) -> pd.DataFrame | None:
+    # Intenta CSV estándar; si falla, intenta ; como separador
+    try:
+        return pd.read_csv(StringIO(text))
+    except Exception:
+        try:
+            return pd.read_csv(StringIO(text), sep=";")
+        except Exception:
+            return None
+
+def _extract_fenced_table(text: str):
+    """
+    Si el LLM devolvió bloques tipo:
+    ```table:markdown ...```, ```table:csv ...``` o ```table:json ...```
+    devolvemos (tipo, contenido). Si no, (None, None).
+    """
+    m = re.search(r"```table:(markdown|csv|json)\s+([\s\S]*?)```", text, flags=re.IGNORECASE)
+    if not m:
+        return None, None
+    return m.group(1).lower(), m.group(2).strip()
+
+# --- Extras robustos para tablas ------------------------------------------------
+FENCE_ANY = re.compile(r"```(?:[a-zA-Z0-9_-]+)?\s*([\s\S]*?)```", re.IGNORECASE)
+
+def _unwrap_if_md_table_in_code(text: str) -> str | None:
+    """Si hay un bloque de código que adentro contiene una tabla Markdown, devuelve SOLO esa tabla sin fences."""
+    for m in FENCE_ANY.finditer(text):
+        candidate = m.group(1).strip()
+        if _is_markdown_table(candidate):
+            return candidate
+    return None
+
+MD_BLOCK_RE = re.compile(
+    r"(?P<block>(?:^\s*\|.*\|\s*$\n)"        # header
+    r"(?:^\s*\|?\s*[:\-]{3,}.*\|\s*$\n)"     # separator
+    r"(?:^\s*\|.*\|\s*$\n?)+)",              # rows
+    re.MULTILINE
+)
+
+def _extract_first_md_table_block(text: str):
+    """
+    Busca la primera tabla Markdown en el texto (aun si hay prosa antes/después).
+    Devuelve (before, table_md, after) o (None, None, None) si no hay.
+    """
+    # 1) Probar dentro de code fences
+    for m in FENCE_ANY.finditer(text):
+        candidate = m.group(1)
+        m2 = MD_BLOCK_RE.search(candidate)
+        if m2:
+            before = text[:m.start()].strip()
+            table = m2.group("block").strip()
+            after = text[m.end():].strip()
+            return before, table, after
+
+    # 2) Probar en texto plano
+    m = MD_BLOCK_RE.search(text)
+    if m:
+        before = text[:m.start()].strip()
+        table = m.group("block").strip()
+        after = text[m.end():].strip()
+        return before, table, after
+
+    return None, None, None
+
+def _render_table_or_text(st_container, raw_text: str):
+    # 1) Fences explícitos tipo table:*
+    # Detectar code fence ```json ... ``` con una lista de dicts
+    m_json = re.search(r"```json\s+([\s\S]*?)```", raw_text, flags=re.IGNORECASE)
+    if m_json:
+        df = _parse_json_table(m_json.group(1).strip())
+        if df is not None and not df.empty:
+            st_container.dataframe(df, use_container_width=True)
+            return
+
+    ftype, fcontent = _extract_fenced_table(raw_text)
+    if ftype == "json":
+        df = _parse_json_table(fcontent)
+        if df is not None and not df.empty:
+            st_container.dataframe(df, use_container_width=True); return
+    elif ftype == "csv":
+        df = _parse_csv(fcontent)
+        if df is not None and not df.empty:
+            st_container.dataframe(df, use_container_width=True); return
+    elif ftype == "markdown":
+        st_container.markdown(fcontent); return
+
+    # 2) Tabla Markdown dentro de code-fence genérico ```...```
+    unwrapped = _unwrap_if_md_table_in_code(raw_text)
+    if unwrapped:
+        # Mostrar texto fuera del bloque como markdown normal si existiera
+        before, _, after = _extract_first_md_table_block(raw_text)  # reutilizamos para capturar periferia
+        if before: st_container.markdown(before)
+        st_container.markdown(unwrapped)
+        if after: st_container.markdown(after)
+        return
+
+    # 3) Texto mixto con tabla Markdown incrustada (sin fences)
+    before, table_md, after = _extract_first_md_table_block(raw_text)
+    if table_md:
+        if before: st_container.markdown(before)
+        st_container.markdown(table_md)
+        if after: st_container.markdown(after)
+        return
+
+    # 4) Heurísticas restantes
+    text = raw_text.strip()
+
+    if _is_json_table(text):
+        df = _parse_json_table(text)
+        if df is not None and not df.empty:
+            st_container.dataframe(df, use_container_width=True); return
+
+    if _is_csv(text):
+        df = _parse_csv(text)
+        if df is not None and not df.empty:
+            st_container.dataframe(df, use_container_width=True); return
+
+    if _is_html_table(text):
+        st_container.markdown(text, unsafe_allow_html=True); return
+
+    # 5) Fallback: texto plano
+    st_container.markdown(text)
+
 
 st.markdown(
     """
@@ -189,7 +360,11 @@ def chat(workspace: str):
         role = "user" if isinstance(msg, HumanMessage) else "assistant"
         avatar = "🧑" if role == "user" else "🤖"
         with st.chat_message(role, avatar=avatar):
-            st.markdown(msg.content)
+            if isinstance(msg, AIMessage):
+                _render_table_or_text(st, msg.content)
+            else:
+                st.markdown(msg.content)
+
 
     # Placeholder adaptado por tipo
     placeholder = (
@@ -222,7 +397,7 @@ def chat(workspace: str):
                     st.error(f"Fallo del grafo: {e}")
 
                 if final_response and getattr(final_response, "content", None):
-                    st.markdown(final_response.content)
+                    _render_table_or_text(st, final_response.content)
                     messages.append(AIMessage(content=final_response.content))
                     _save_messages(workspace)
 

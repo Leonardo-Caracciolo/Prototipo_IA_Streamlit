@@ -28,6 +28,10 @@ from core.tools import (
     items_de_factura,
     info_factura_min,
     buscar_en_documentos_de_conocimiento,
+    listar_apocrifas,
+    listar_cae,
+    listar_no_en_mis_comprobantes,
+    resumen_validaciones,
     # NUEVAS (RAG leyes)
     buscar_fragmentos_de_leyes,
     contar_articulos_por_archivo,
@@ -68,6 +72,10 @@ def _allowed_tools_for(ws_type: str):
             items_de_factura,
             info_factura_min,
             buscar_en_documentos_de_conocimiento,
+            listar_apocrifas,
+            listar_cae,
+            listar_no_en_mis_comprobantes,
+            resumen_validaciones,
         ]
     else:  # Conocimiento de leyes
         return [
@@ -85,6 +93,7 @@ def call_model(state: AgentState):
     model_with_tools = model.bind_tools(tools)
 
     if (state["ws_type"] or "").lower().startswith("analisis"):
+        print("✔ [AGENT] Análisis de facturas")
         system_hint = SystemMessage(content=(
             "Eres un asistente de ANÁLISIS DE FACTURAS. "
             "Usa EXCLUSIVAMENTE las herramientas de base de datos (Postgres) provistas. "
@@ -95,7 +104,26 @@ def call_model(state: AgentState):
             "Zona horaria: America/Argentina/Buenos_Aires. Al interpretar 'hoy', 'ayer', etc., usa esa zona.\n\n"
             "Formato de respuesta: nunca muestres IDs internos. Muestra columnas amigables: "
             "emisor, comprobante (tipo/letra), PV-Número (con ceros), fechas (YYYY-MM-DD), total con moneda, remitente (emisor_mail) y file_name cuando aporte contexto. "
-            "Usa tablas Markdown cuando sean 2+ filas. Abrevia números y mantén 2 decimales en importes.\n\n"
+            "Formato de respuesta:\n"
+            "- Comienza con un resumen de 1 línea (qué mostraste y filtros clave).\n"
+            "- Si vas a mostrar 2+ filas, DEVUELVE LA TABLA usando obligatoriamente uno de estos fences (preferencia por JSON):\n"
+            "  ```table:json\n"
+            "  [{\"col1\":\"...\"}]\n"
+            "  ```\n"
+            "  También se aceptan:\n"
+            "  ```table:markdown\n"
+            "  | c1 | c2 |\n"
+            "  |----|----|\n"
+            "  | .. | .. |\n"
+            "  ```\n"
+            "  ```table:csv\n"
+            "  c1,c2\\n..,..\n"
+            "  ```\n"
+            "- NO incluyas ningún texto ni comentarios dentro del bloque de tabla.\n"
+            "- Para 1 sola fila o detalles puntuales, puedes listar en viñetas o una mini tabla (mismo esquema de fences si es tabla).\n"
+            "- Nunca muestres IDs internos. Muestra columnas amigables: emisor, comprobante (tipo/letra), PV-Número (con ceros), "
+            "  fechas (YYYY-MM-DD), total con moneda, remitente (emisor_mail) y file_name cuando aporte contexto.\n"
+            "- Abrevia números y usa 2 decimales en importes.\n\n"
             "Moneda: entiende sinónimos del usuario (USD/US$/U$S/dólar/es; ARS/PESOS/AR$; EUR/€). "
             "Cuando se consulte por moneda, usa la tool preparada para variantes. "
             "Si no hay resultados, sugiere consultar 'monedas_disponibles'.\n\n"
