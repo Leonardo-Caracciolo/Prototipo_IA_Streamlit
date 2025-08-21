@@ -25,6 +25,8 @@ from core.tools import (
     detalle_factura,
     resumen_percepciones_iibb,
     resumen_iva_por_alicuota,
+    listar_facturas_recibidas,
+    listar_facturas_emitidas,
     items_de_factura,
     info_factura_min,
     # Controles
@@ -65,6 +67,7 @@ def _allowed_tools_for(ws_type: str):
             listar_facturas_por_email_remitente,
             buscar_por_numero_factura,
             contar_duplicados_por_clave_natural,
+            listar_facturas_recibidas,
             buscar_por_cae,
             total_facturado_por_emisor_y_mes,
             kpis_resumen,
@@ -73,6 +76,7 @@ def _allowed_tools_for(ws_type: str):
             facturas_vencen_entre,
             facturas_por_moneda,
             buscar_facturas_por_texto_libre,
+            listar_facturas_emitidas,
             ultimas_facturas,
             detalle_factura,
             resumen_percepciones_iibb,
@@ -153,6 +157,7 @@ def call_model(state: AgentState):
             "Muestra 'emisor_mail' si es relevante para el usuario final (es el remitente del correo). "
             "No expongas datos sensibles que no hayan sido consultados explícitamente.\n\n"
             "Estilo: primero responde con un breve resumen (1 línea), luego la tabla/ítems. "
+            "Recorda que estamos en el dia 21 de Agosto del 2025. "
             "Si una consulta es ambigua, elige un criterio razonable y explícalo en una línea (sin repreguntar salvo imprescindible)."
         ))
     else:

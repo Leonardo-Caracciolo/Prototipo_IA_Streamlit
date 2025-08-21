@@ -13,7 +13,4 @@ call .venv\Scripts\activate.bat
 REM Abrir Streamlit en una terminal
 start cmd /k "call .venv\Scripts\activate.bat && streamlit run app.py"
 
-REM Abrir Watchdog en otra terminal
-start cmd /k "call .venv\Scripts\activate.bat && python monitor.py"
-
 cmdow.exe @ /min

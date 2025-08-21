@@ -1,0 +1,8 @@
+{
+  "display_name": "Base Facturas",
+  "type": "Analisis de facturas",
+  "table": "facturas",
+  "slug": "base-facturas",
+  "created_at": "2025-08-21T14:23:59.327105Z",
+  "updated_at": "2025-08-21T14:23:59.327105Z"
+}

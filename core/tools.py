@@ -1,6 +1,6 @@
 # core/tools.py — versión corregida con SQL seguro + RAG de leyes robusto
 from langchain_core.tools import tool
-
+import datetime
 import os
 import re
 import json
@@ -227,6 +227,127 @@ def listar_facturas_por_email_remitente(email: str, limit: int = 10, workspace: 
         LIMIT %s;
     """
     return _execute(q, (email, _limit(limit, default=10)))
+
+@tool
+def listar_facturas_recibidas(anio: int = None, mes: int = None, dia: int = None, periodo: str = None, limit: int = 50, workspace: str = "") -> str:
+    """
+    Lista facturas recibidas. Puede filtrar por una fecha específica (año, mes, y día opcional)
+    o por períodos relativos como "hoy", "ayer", "mes_pasado".
+    Ordena por fecha de recepción descendente.
+    Ejemplos de uso:
+    - Para facturas de hoy: usar periodo="hoy".
+    - Para facturas de ayer: usar periodo="ayer".
+    - Para facturas del mes pasado: usar periodo="mes_pasado".
+    - Para facturas de un mes específico: especificar anio y mes (ej: anio=2024, mes=12).
+    - Para facturas de un día específico: especificar anio, mes y dia.
+    """
+    params = []
+    where_clauses = []
+    today = datetime.date.today()
+
+    if periodo:
+        periodo = periodo.lower()
+        if periodo == "hoy":
+            where_clauses.append("DATE(fecha_recepcion) = %s")
+            params.append(today)
+        elif periodo == "ayer":
+            yesterday = today - datetime.timedelta(days=1)
+            where_clauses.append("DATE(fecha_recepcion) = %s")
+            params.append(yesterday)
+        elif periodo == "mes_pasado":
+            first_day_current_month = today.replace(day=1)
+            last_day_last_month = first_day_current_month - datetime.timedelta(days=1)
+            where_clauses.append("EXTRACT(YEAR FROM fecha_recepcion) = %s")
+            params.append(last_day_last_month.year)
+            where_clauses.append("EXTRACT(MONTH FROM fecha_recepcion) = %s")
+            params.append(last_day_last_month.month)
+        else:
+            return f"Error: El período '{periodo}' no es válido. Usa 'hoy', 'ayer' o 'mes_pasado'."
+    elif anio and mes:
+        if not (1 <= mes <= 12 and anio > 1900):
+            return "Error: Por favor, proporciona un año y un mes válidos (1-12)."
+        where_clauses.append("EXTRACT(YEAR FROM fecha_recepcion) = %s")
+        params.append(anio)
+        where_clauses.append("EXTRACT(MONTH FROM fecha_recepcion) = %s")
+        params.append(mes)
+        if dia:
+            if not (1 <= dia <= 31):
+                 return "Error: Por favor, proporciona un día válido (1-31)."
+            where_clauses.append("EXTRACT(DAY FROM fecha_recepcion) = %s")
+            params.append(dia)
+    else:
+        return "Error: Debes especificar un período ('hoy', 'ayer', 'mes_pasado') o un año y mes."
+
+    q = f"""
+        SELECT
+          id, fecha_recepcion, file_name, fecha_emision, tipo_comprobante, letra_comprobante,
+          punto_venta, numero_factura, emisor_mail, importe_total, moneda
+        FROM {AFIP_VIEW}
+        WHERE {" AND ".join(where_clauses)}
+        ORDER BY fecha_recepcion DESC, id DESC
+        LIMIT %s;
+    """
+    params.append(_limit(limit))
+    return _execute(q, tuple(params))
+
+@tool
+def listar_facturas_emitidas(anio: int = None, mes: int = None, dia: int = None, periodo: str = None, limit: int = 50, workspace: str = "") -> str:
+    """
+    Lista facturas emitidas. Puede filtrar por una fecha específica (año, mes, y día opcional).
+    Ordena por fecha de recepción descendente.
+    Ejemplos de uso:
+    - Para facturas de un mes específico: especificar anio y mes (ej: anio=2024, mes=12).
+    - Para facturas de un día específico: especificar anio, mes y dia.
+    - Para facturas de un anio específico: especificar anio.
+    """
+    params = []
+    where_clauses = []
+    today = datetime.date.today()
+
+    if periodo:
+        periodo = periodo.lower()
+        if periodo == "hoy":
+            where_clauses.append("DATE(fecha_emision) = %s")
+            params.append(today)
+        elif periodo == "ayer":
+            yesterday = today - datetime.timedelta(days=1)
+            where_clauses.append("DATE(fecha_emision) = %s")
+            params.append(yesterday)
+        elif periodo == "mes_pasado":
+            first_day_current_month = today.replace(day=1)
+            last_day_last_month = first_day_current_month - datetime.timedelta(days=1)
+            where_clauses.append("EXTRACT(YEAR FROM fecha_emision) = %s")
+            params.append(last_day_last_month.year)
+            where_clauses.append("EXTRACT(MONTH FROM fecha_emision) = %s")
+            params.append(last_day_last_month.month)
+        else:
+            return f"Error: El período '{periodo}' no es válido. Usa 'hoy', 'ayer' o 'mes_pasado'."
+    elif anio and mes:
+        if not (1 <= mes <= 12 and anio > 1900):
+            return "Error: Por favor, proporciona un año y un mes válidos (1-12)."
+        where_clauses.append("EXTRACT(YEAR FROM fecha_emision) = %s")
+        params.append(anio)
+        where_clauses.append("EXTRACT(MONTH FROM fecha_emision) = %s")
+        params.append(mes)
+        if dia:
+            if not (1 <= dia <= 31):
+                 return "Error: Por favor, proporciona un día válido (1-31)."
+            where_clauses.append("EXTRACT(DAY FROM fecha_emision) = %s")
+            params.append(dia)
+    else:
+        return "Error: Debes especificar un período ('hoy', 'ayer', 'mes_pasado') o un año y mes."
+
+    q = f"""
+        SELECT
+          id, fecha_emision, file_name, fecha_emision, tipo_comprobante, letra_comprobante,
+          punto_venta, numero_factura, emisor_mail, importe_total, moneda
+        FROM {AFIP_VIEW}
+        WHERE {" AND ".join(where_clauses)}
+        ORDER BY fecha_emision DESC, id DESC
+        LIMIT %s;
+    """
+    params.append(_limit(limit))
+    return _execute(q, tuple(params))
 
 @tool
 def buscar_por_numero_factura(punto_venta: int, numero_factura: int, cuit_emisor: str = "", workspace: str = "") -> str:
@@ -1731,6 +1852,8 @@ lista_de_herramientas = [
     resumen_iva_por_alicuota,
     items_de_factura,
     info_factura_min,
+    listar_facturas_recibidas,
+    listar_facturas_emitidas,
     # Controles
     listar_apocrifas,
     listar_cae,

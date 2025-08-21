@@ -286,7 +286,31 @@ def _extract_artifacts(text: str):
 
 def _meta_path(name: str) -> Path:
     return _WS_ROOT / name / "meta.json"
-
+from tenacity import retry, stop_after_attempt, wait_exponential
+@retry(
+    wait=wait_exponential(multiplier=1, min=2, max=10), # Espera 2s, 4s, 8s...
+    stop=stop_after_attempt(3), # Intenta un máximo de 3 veces
+    # Podrías especificar el tipo de error si lo conoces, por ejemplo:
+    # retry=retry_if_exception_type(httpx.RequestError)
+)
+def stream_graph_with_retries(app, graph_state):
+    """
+    Ejecuta el stream del grafo y devuelve la respuesta final.
+    Tenacity reintentará esta función si lanza una excepción.
+    """
+    print("Iniciando stream del grafo...") # Útil para depurar y ver los reintentos
+    final_response = None
+    for event in app.stream(graph_state, {"recursion_limit": 15}):
+        agent_state = event.get("agent") if isinstance(event, dict) else None
+        if agent_state and agent_state.get("messages"):
+            # Siempre se obtiene el último mensaje disponible
+            final_response = agent_state["messages"][-1]
+    
+    if final_response is None:
+        # Si el stream termina sin mensajes, es una condición de fallo
+        raise RuntimeError("El stream del grafo terminó sin producir una respuesta.")
+        
+    return final_response
 
 def get_workspace_type(name: str) -> str:
     # Simulación para pruebas
@@ -339,7 +363,7 @@ def chat(workspace: str):
     if st.session_state.pop(f"action:update:{workspace}", False):
         # --- IMPORTANTE: CONFIGURA ESTAS 2 LÍNEAS ---
         # 1. Ruta del archivo Excel principal que quieres copiar.
-        ruta_archivo_origen = r"C:\Users\seba\Desktop\IA_DELOITTE\Prototipo_IA_Streamlit\fac_acumuladas\Facturas_totales.xlsx"
+        ruta_archivo_origen = r"C:\Users\JArdita\Desktop\BT - Prototipo IA\Prototipo_IA_Streamlit\fac_acumuladas\Facturas_totales.xlsx"
         # 2. Ruta del historial del chat en formato JSON.
         ruta_json_historial = os.path.join(_WS_ROOT, workspace, "history.json")
 
@@ -472,12 +496,17 @@ def chat(workspace: str):
                 graph_state = {"messages": list(messages), "workspace": workspace, "ws_type": ws_type}
                 final_response = None
                 try:
-                    for event in app.stream(graph_state, {"recursion_limit": 15}):
-                        agent_state = event.get("agent") if isinstance(event, dict) else None
-                        if agent_state and agent_state.get("messages"):
-                            final_response = agent_state["messages"][-1]
+                    # Llamamos a nuestra nueva función que tiene la lógica de reintentos
+                    # st.info("Generando respuesta, por favor espere...")
+                    final_response = stream_graph_with_retries(app, graph_state)
+                    
+                    # Si todo salió bien, mostramos la respuesta
+                    # st.write("Respuesta final:")
+                    # st.write(final_response.content) # o como necesites mostrarla
+
                 except Exception as e:
-                    st.error(f"Fallo del grafo: {e}")
+                    # Este bloque ahora se ejecutará solo si todos los reintentos fallan
+                    st.error(f"Fallo del grafo después de varios intentos: {e}")
 
                 if final_response and getattr(final_response, "content", None):
                     # --- MODIFICACIÓN 2: Renderizado condicional de la nueva respuesta ---
