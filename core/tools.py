@@ -255,16 +255,16 @@ def buscar_por_numero_factura(punto_venta: int, numero_factura: int, cuit_emisor
 def contar_duplicados_por_clave_natural(limit: int = 100) -> str:
     """
     Lista todas las filas de facturas que tienen una clave natural duplicada.
-    La clave es (emisor_id, cod, letra, PV, número).
+    La clave natural es (punto_venta, numero_factura).
     Muestra todos los campos de cada factura duplicada.
     """
     q = f"""
         WITH Duplicados AS (
             SELECT
-                emisor_id, codigo_comprobante, letra_comprobante, punto_venta, numero_factura,
+                punto_venta, numero_factura,
                 COUNT(*) AS repeticiones
             FROM {T_FACTURA}
-            GROUP BY 1,2,3,4,5
+            GROUP BY 1,2
             HAVING COUNT(*) > 1
         )
         SELECT f.*,
@@ -462,34 +462,152 @@ def detalle_factura(factura_id: int) -> str:
     return _execute(q, (factura_id,))
 
 @tool
-def resumen_percepciones_iibb(desde: str, hasta: str, cuit_emisor: str = "", workspace: str = "") -> str:
+def resumen_percepciones_iibb(
+    desde: str = "",
+    hasta: str = "",
+    anio: str = "",
+    cuit_emisor: str = "",
+    jurisdiccion: str = "",       # filtra por jurisdicción normalizada (PBA, MISIONES, CABA, etc.)
+    modo: str = "resumen",        # "resumen" | "detalle" | "ambos"
+    limit: int = 200,             # sólo aplica a "detalle"
+    offset: int = 0,              # sólo aplica a "detalle"
+    workspace: str = "",
+) -> str:
     """
-    Resumen de percepciones IIBB por jurisdicción entre fechas (opcional filtrar por CUIT emisor).
+    Resumen y/o detalle de percepciones IIBB por jurisdicción con normalización (PBA/Misiones/CABA).
+    Filtros de fecha opcionales:
+      - `anio=YYYY` -> usa rango [YYYY-01-01, (YYYY+1)-01-01) (sargable).
+      - `desde` y `hasta` -> usa BETWEEN inclusive.
+      - si no hay fechas -> total general.
+
+    `modo`:
+      - "resumen": SUM por jurisdicción normalizada.
+      - "detalle": filas de cada percepción/factura con SUM() OVER por jurisdicción.
+      - "ambos": devuelve primero el resumen y luego el detalle.
     """
+    # Normalizador de jurisdicción, reutilizado en CTE
+    NORMALIZA = """
+      CASE
+        WHEN p.jurisdiccion IS NULL OR btrim(p.jurisdiccion) = '' THEN 'SIN JURISDICCION'
+        WHEN REGEXP_REPLACE(upper(p.jurisdiccion), '[^A-ZÁÉÍÓÚÑ ]', '', 'g')
+             ~ '(ARBA|PBA|BS AS|BUENOS *AIRES|PROVINCIA DE BUENOS *AIRES)' THEN 'PBA'
+        WHEN REGEXP_REPLACE(upper(p.jurisdiccion), '[^A-ZÁÉÍÓÚÑ ]', '', 'g')
+             ~ 'MISIONES' THEN 'MISIONES'
+        WHEN REGEXP_REPLACE(upper(p.jurisdiccion), '[^A-ZÁÉÍÓÚÑ ]', '', 'g')
+             ~ '(CABA|CIUDAD *AUTONOMA|CAPITAL *FEDERAL|GCBA)' THEN 'CABA'
+        ELSE initcap(regexp_replace(btrim(p.jurisdiccion), '^[0-9]+\\s*-\\s*', ''))
+      END
+    """
+
+    # CTE base con normalización + campos claves para detalle
+    base_sql = f"""
+    WITH base AS (
+      SELECT
+        p.id                          AS percepcion_id,
+        p.jurisdiccion                AS jurisdiccion_raw,
+        {NORMALIZA}                   AS jurisdiccion,
+        p.monto                       AS monto_percepcion,
+        f.id                          AS factura_id,
+        f.emisor_id, f.receptor_id,
+        COALESCE(f.fecha_emision, f.fecha_recepcion::date) AS fecha,
+        f.tipo_comprobante, f.letra_comprobante, f.punto_venta, f.numero_factura,
+        f.codigo_comprobante, f.importe_total, f.moneda
+      FROM {T_PERCP} p
+      JOIN {T_FACTURA} f ON f.id = p.factura_id
+      WHERE p.tipo = 'IIBB'
+    ),
+    det AS (
+      SELECT
+        b.*,
+        e.cuit::text  AS cuit_emisor,
+        e.razon_social AS razon_social_emisor,
+        r.cuit::text  AS cuit_receptor,
+        r.razon_social AS razon_social_receptor
+      FROM base b
+      LEFT JOIN {T_CONTRIB} e ON e.id = b.emisor_id
+      LEFT JOIN {T_CONTRIB} r ON r.id = b.receptor_id
+    )
+    """
+
+    # Construcción de filtros sargables
+    where = []
+    params = []
+
+    if anio:
+      # Rango sargable por año
+      anio_int = int(anio)
+      desde_anio = f"{anio_int:04d}-01-01"
+      hasta_anio_exclusive = f"{anio_int + 1:04d}-01-01"
+      where.append("det.fecha >= %s::date AND det.fecha < %s::date")
+      params.extend([desde_anio, hasta_anio_exclusive])
+    elif desde and hasta:
+      where.append("det.fecha BETWEEN %s::date AND %s::date")
+      params.extend([desde, hasta])
+
     if cuit_emisor:
-        q = f"""
-            SELECT p.jurisdiccion, SUM(p.monto) AS total
-            FROM {T_PERCP} p
-            JOIN {T_FACTURA} f ON f.id = p.factura_id
-            JOIN {T_CONTRIB} e ON e.id = f.emisor_id
-            WHERE p.tipo = 'IIBB'
-              AND f.fecha_emision >= %s::date AND f.fecha_emision <= %s::date
-              AND e.cuit = %s
-            GROUP BY p.jurisdiccion
-            ORDER BY total DESC;
-        """
-        return _execute(q, (desde, hasta, cuit_emisor))
+      where.append("det.cuit_emisor = %s")
+      params.append(cuit_emisor)
+
+    if jurisdiccion:
+      # Se filtra por el valor normalizado (ej. 'PBA', 'MISIONES', 'CABA')
+      where.append("det.jurisdiccion = %s")
+      params.append(jurisdiccion.upper())
+
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+    # Query resumen
+    q_resumen = base_sql + f"""
+    SELECT det.jurisdiccion, SUM(det.monto_percepcion) AS total
+    FROM det
+    {where_sql}
+    GROUP BY det.jurisdiccion
+    ORDER BY total DESC;
+    """
+
+    # Query detalle (con total por jurisdicción como columna)
+    q_detalle = base_sql + f"""
+    SELECT
+      det.jurisdiccion,
+      det.jurisdiccion_raw,
+      det.percepcion_id,
+      det.factura_id,
+      det.fecha,
+      det.tipo_comprobante,
+      det.letra_comprobante,
+      det.punto_venta,
+      det.numero_factura,
+      det.codigo_comprobante,
+      det.moneda,
+      det.importe_total,
+      det.cuit_emisor,
+      det.razon_social_emisor,
+      det.cuit_receptor,
+      det.razon_social_receptor,
+      det.monto_percepcion,
+      SUM(det.monto_percepcion) OVER (PARTITION BY det.jurisdiccion) AS total_jurisdiccion
+    FROM det
+    {where_sql}
+    ORDER BY det.jurisdiccion, det.fecha, det.factura_id
+    LIMIT %s OFFSET %s;
+    """
+
+    # Ejecución según modo
+    m = (modo or "resumen").lower()
+    if m == "resumen":
+        return _execute(q_resumen, tuple(params))
+    elif m == "detalle":
+        params_det = tuple(list(params) + [limit, offset])
+        return _execute(q_detalle, params_det)
+    elif m == "ambos":
+        out_res = _execute(q_resumen, tuple(params))
+        params_det = tuple(list(params) + [limit, offset])
+        out_det = _execute(q_detalle, params_det)
+        # Devolvemos ambas tablas, separadas de forma legible
+        return f"=== RESUMEN ===\n{out_res}\n\n=== DETALLE (limit={limit}, offset={offset}) ===\n{out_det}"
     else:
-        q = f"""
-            SELECT p.jurisdiccion, SUM(p.monto) AS total
-            FROM {T_PERCP} p
-            JOIN {T_FACTURA} f ON f.id = p.factura_id
-            WHERE p.tipo = 'IIBB'
-              AND f.fecha_emision >= %s::date AND f.fecha_emision <= %s::date
-            GROUP BY p.jurisdiccion
-            ORDER BY total DESC;
-        """
-        return _execute(q, (desde, hasta))
+        return "Valor de 'modo' inválido. Use 'resumen', 'detalle' o 'ambos'."
+
+
 
 @tool
 def resumen_iva_por_alicuota(desde: str, hasta: str, cuit_emisor: str = "", workspace: str = "") -> str:

@@ -1,6 +1,3 @@
-# ──────────────────────────────────────────────────────────────────────────────
-# FILE: main_chat.py (refactor visual + robustez)
-# ──────────────────────────────────────────────────────────────────────────────
 import os
 import re
 import json
@@ -18,6 +15,11 @@ from core.history import load_history, save_history
 from core.graph_agent import app
 from utils.voz_a_prompt import escuchar_y_convertir
 from core.vectorizer import cargar_documentos, aplicar_chunking, crear_vectorstore
+
+import os
+import shutil
+import subprocess
+import sys
 
 load_dotenv()
 
@@ -103,9 +105,9 @@ def _unwrap_if_md_table_in_code(text: str) -> str | None:
     return None
 
 MD_BLOCK_RE = re.compile(
-    r"(?P<block>(?:^\s*\|.*\|\s*$\n)"        # header
-    r"(?:^\s*\|?\s*[:\-]{3,}.*\|\s*$\n)"     # separator
-    r"(?:^\s*\|.*\|\s*$\n?)+)",              # rows
+    r"(?P<block>(?:^\s*\|.*\|\s*$\n)"      # header
+    r"(?:^\s*\|?\s*[:\-]{3,}.*\|\s*$\n)"    # separator
+    r"(?:^\s*\|.*\|\s*$\n?)+)",             # rows
     re.MULTILINE
 )
 
@@ -287,6 +289,12 @@ def _meta_path(name: str) -> Path:
 
 
 def get_workspace_type(name: str) -> str:
+    # Simulación para pruebas
+    if "leyes" in name.lower():
+        return "Conocimiento de leyes"
+    if "facturas" in name.lower():
+        return "Analisis de Facturas"
+    
     try:
         p = _meta_path(name)
         if not p.exists():
@@ -327,27 +335,98 @@ def chat(workspace: str):
         except Exception as e:
             st.toast(f"Error de voz: {e}")
 
-    do_process = st.session_state.pop(f"action:update:{workspace}", False)
+    # do_process = st.session_state.pop(f"action:update:{workspace}", False)
+    if st.session_state.pop(f"action:update:{workspace}", False):
+        # --- IMPORTANTE: CONFIGURA ESTAS 2 LÍNEAS ---
+        # 1. Ruta del archivo Excel principal que quieres copiar.
+        ruta_archivo_origen = r"C:\Users\seba\Desktop\IA_DELOITTE\Prototipo_IA_Streamlit\fac_acumuladas\Facturas_totales.xlsx"
+        # 2. Ruta del historial del chat en formato JSON.
+        ruta_json_historial = os.path.join(_WS_ROOT, workspace, "history.json")
+
+        try:
+            # --- Parte 1: Creación de la carpeta y copia del archivo principal ---
+            ruta_descargas = os.path.join(os.path.expanduser("~"), "Downloads")
+            ruta_carpeta_destino = os.path.join(ruta_descargas, "resumen_ia")
+            os.makedirs(ruta_carpeta_destino, exist_ok=True)
+
+            if os.path.exists(ruta_archivo_origen):
+                shutil.copy(ruta_archivo_origen, ruta_carpeta_destino)
+                st.toast("✅ Archivo principal copiado exitosamente!")
+            else:
+                st.warning("⚠️ No se encontró el archivo Excel principal para copiar. Saltando este paso.")
+
+            # --- Parte 2: Lectura del JSON y creación del Excel a partir de la tabla ---
+            with open(ruta_json_historial, 'r', encoding='utf-8') as f:
+                historial_chat = json.load(f)
+
+            if historial_chat:
+                ultimo_par = historial_chat[-1]
+                contenido_asistente = ultimo_par[1]
+
+                if "table:json" in contenido_asistente:
+                    st.toast("🔎 Tabla en formato JSON encontrada. Procesando...")
+                    try:
+                        # ---- INICIO DE LA CORRECCIÓN DEL ERROR "EXTRA DATA" ----
+                        # 1. Dividimos el texto para obtener todo lo que está DESPUÉS de ```table:json
+                        parte_posterior = contenido_asistente.split("```table:json", 1)[1]
+                        
+                        # 2. Sobre ese resultado, tomamos todo lo que está ANTES del siguiente ```
+                        json_string = parte_posterior.split("```", 1)[0]
+                        
+                        # 3. Limpiamos espacios en blanco por seguridad
+                        json_string = json_string.strip()
+                        # ---- FIN DE LA CORRECCIÓN ----
+                        
+                        datos_tabla = json.loads(json_string)
+                        df = pd.DataFrame(datos_tabla)
+                        
+                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        nombre_excel_tabla = f"tabla_generada_{timestamp}.xlsx"
+                        ruta_excel_tabla = os.path.join(ruta_carpeta_destino, nombre_excel_tabla)
+
+                        df.to_excel(ruta_excel_tabla, index=False)
+                        st.success(f"📈 ¡Tabla guardada como '{nombre_excel_tabla}'!")
+
+                    except (json.JSONDecodeError, IndexError) as e:
+                        st.error(f"Error al procesar la tabla JSON: {e}")
+                    except Exception as e:
+                        st.error(f"Error al crear el Excel desde la tabla: {e}")
+
+            # --- Parte 3: Abrir la carpeta de destino ---
+            if sys.platform == "win32":
+                subprocess.Popen(f'explorer "{os.path.realpath(ruta_carpeta_destino)}"')
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", ruta_carpeta_destino])
+            else:
+                subprocess.Popen(["xdg-open", ruta_carpeta_destino])
+            
+            st.toast(f"📂 Abriendo la carpeta: resumen_ia")
+
+        except FileNotFoundError:
+            st.error(f"❌ Error: No se encontró el archivo JSON en '{ruta_json_historial}'. Revisa la ruta.")
+        except Exception as e:
+            st.error(f"Ocurrió un error inesperado: {e}")
+
 
     # Procesamiento de documentos: manual (desde sidebar) + cambio detectado
-    if "docs_fingerprint" not in st.session_state:
-        st.session_state.docs_fingerprint = {}
-    fp_before = st.session_state.docs_fingerprint.get(workspace)
-    fp_now = _fingerprint_workspace_docs(workspace)
+    # if "docs_fingerprint" not in st.session_state:
+    #     st.session_state.docs_fingerprint = {}
+    # fp_before = st.session_state.docs_fingerprint.get(workspace)
+    # fp_now = _fingerprint_workspace_docs(workspace)
 
-    if do_process or (fp_before != fp_now and fp_now):
-        with st.status("Procesando documentos…", expanded=True) as status:
-            status.write("Cargando documentos…")
-            documentos = cargar_documentos(workspace)
-            if documentos:
-                status.write("Chunking…")
-                chunks = aplicar_chunking(documentos)
-                status.write("Creando vectorstore…")
-                crear_vectorstore(workspace, chunks)
-                st.session_state.docs_fingerprint[workspace] = fp_now
-                status.update(label="✅ Base de conocimiento actualizada", state="complete")
-            else:
-                status.update(label="No se encontraron documentos válidos", state="error")
+    # if do_process or (fp_before != fp_now and fp_now):
+    #     with st.status("Procesando documentos…", expanded=True) as status:
+    #         status.write("Cargando documentos…")
+    #         documentos = cargar_documentos(workspace)
+    #         if documentos:
+    #             status.write("Chunking…")
+    #             chunks = aplicar_chunking(documentos)
+    #             status.write("Creando vectorstore…")
+    #             crear_vectorstore(workspace, chunks)
+    #             st.session_state.docs_fingerprint[workspace] = fp_now
+    #             status.update(label="✅ Base de conocimiento actualizada", state="complete")
+    #         else:
+    #             status.update(label="No se encontraron documentos válidos", state="error")
 
     st.markdown(
         "<div class='small-note'>Consejo: usá el panel lateral para acciones (limpiar, actualizar base, voz). </div>",
@@ -361,7 +440,11 @@ def chat(workspace: str):
         avatar = "🧑" if role == "user" else "🤖"
         with st.chat_message(role, avatar=avatar):
             if isinstance(msg, AIMessage):
-                _render_table_or_text(st, msg.content)
+                # --- MODIFICACIÓN 1: Renderizado condicional en el historial ---
+                if ws_type.lower().startswith("analisis"):
+                    _render_table_or_text(st, msg.content)
+                else:
+                    st.markdown(msg.content)
             else:
                 st.markdown(msg.content)
 
@@ -397,7 +480,12 @@ def chat(workspace: str):
                     st.error(f"Fallo del grafo: {e}")
 
                 if final_response and getattr(final_response, "content", None):
-                    _render_table_or_text(st, final_response.content)
+                    # --- MODIFICACIÓN 2: Renderizado condicional de la nueva respuesta ---
+                    if ws_type.lower().startswith("analisis"):
+                        _render_table_or_text(st, final_response.content)
+                    else:
+                        st.markdown(final_response.content)
+                    
                     messages.append(AIMessage(content=final_response.content))
                     _save_messages(workspace)
 
@@ -419,5 +507,3 @@ def chat(workspace: str):
                 else:
                     st.error("El agente no devolvió una respuesta utilizable.")
 
-# Nota: ahora el toolbar de acciones está en el sidebar. También se pasa `ws_type` al grafo
-# por si querés cambiar herramientas/prompting en `core.graph_agent` según el tipo.

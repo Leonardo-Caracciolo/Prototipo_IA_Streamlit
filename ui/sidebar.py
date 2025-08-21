@@ -223,7 +223,7 @@ def sidebar():
         if col1.button("🧹 Limpiar", use_container_width=True, key="sb_clear"):
             st.session_state[f"action:clear:{chosen_ws}"] = True
             st.rerun()
-        if col2.button("📚 Actualizar base", use_container_width=True, key="sb_update"):
+        if col2.button("📚 Resumen", use_container_width=True, key="sb_update"):
             st.session_state[f"action:update:{chosen_ws}"] = True
             st.rerun()
         if st.sidebar.button("🎙️ Voz → Texto", use_container_width=True, key="sb_voice"):
